@@ -1,7 +1,11 @@
+"""
+Minimal character-level Vanilla RNN model. Written by Andrej Karpathy (@karpathy)
+BSD License
+"""
 import numpy as np
 
 # data I/O
-data = open('C:/Users/twich/OneDrive/Documentos/NeuralNets/rnn/data/way_of_kings.txt', 'r', encoding="utf-8").read() # should be simple plain text file
+data = open('/Users/eduardoleao/Documents/NN/rnn/data/way_of_kings.txt', 'r').read() # should be simple plain text file
 chars = list(set(data))
 data_size, vocab_size = len(data), len(chars)
 print('data has {} characters, {} unique.'.format(data_size, vocab_size))
@@ -56,25 +60,13 @@ def lossFun(inputs, targets, hprev):
     np.clip(dparam, -5, 5, out=dparam) # clip to mitigate exploding gradients
   return loss, dWxh, dWhh, dWhy, dbh, dby, hs[len(inputs)-1]
 
-def sample(h, seed, n):
+def sample(h, seed_ix, n):
   """ 
   sample a sequence of integers from the model 
   h is memory state, seed_ix is seed letter for first time step
   """
-  seed_ix = [char_to_ix[i] for i in seed]
-  xs, hs = {}, {}
-  hs[-1] = h
-
-  # add context
-  for t in range(len(seed_ix)):
-    xs[t] = np.zeros((vocab_size,1)) # encode in 1-of-k representation
-    xs[t][seed_ix[t]] = 1
-    hs[t] = np.tanh(np.dot(Wxh, xs[t]) + np.dot(Whh, hs[t-1]) + bh) # hidden state
-    h = hs[t] # store context in h variable
-
-  
   x = np.zeros((vocab_size, 1))
-  x[char_to_ix[' ']] = 1
+  x[seed_ix] = 1
   ixes = []
   for t in range(n):
     h = np.tanh(np.dot(Wxh, x) + np.dot(Whh, h) + bh)
@@ -90,7 +82,7 @@ n, p = 0, 0
 mWxh, mWhh, mWhy = np.zeros_like(Wxh), np.zeros_like(Whh), np.zeros_like(Why)
 mbh, mby = np.zeros_like(bh), np.zeros_like(by) # memory variables for Adagrad
 smooth_loss = -np.log(1.0/vocab_size)*seq_length # loss at iteration 0
-while n < 50000000:
+while True:
   # prepare inputs (we're sweeping from left to right in steps seq_length long)
   if p+seq_length+1 >= len(data) or n == 0: 
     hprev = np.zeros((hidden_size,1)) # reset RNN memory
@@ -100,10 +92,9 @@ while n < 50000000:
 
   # sample from the model now and then
   if n % 1000 == 0:
-    seed = "Shallan"
-    sample_ix = sample(hprev, seed, 200)
-    txt = seed + ' ' + ''.join(ix_to_char[ix] for ix in sample_ix[1:])
-    print('----\n{} \n----'.format(txt))
+    sample_ix = sample(hprev, inputs[0], 200)
+    txt = ''.join(ix_to_char[ix] for ix in sample_ix)
+    print('----\n {} \n----'.format(txt, ))
 
   # forward seq_length characters through the net and fetch gradient
   loss, dWxh, dWhh, dWhy, dbh, dby, hprev = lossFun(inputs, targets, hprev)
