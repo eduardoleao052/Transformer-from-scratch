@@ -16,9 +16,17 @@ class RNN():
     self.char_to_ix = { ch:i for i,ch in enumerate(chars) }
     self.ix_to_char = { i:ch for i,ch in enumerate(chars) }
  
+    self.Wxh[0] = np.random.randn(hidden_size, self.vocab_size)/np.sqrt(self.vocab_size) # input to hidden
+    self.Whh[0] = np.random.randn(hidden_size, hidden_size)/np.sqrt(hidden_size) # hidden to hidden
+    self.Why(...) = np.random.randn(self.vocab_size, hidden_size)/np.sqrt(hidden_size) # hidden to output
+
+    self.bh = np.zeros((hidden_size, 1)) # hidden bias
+    self.by = np.zeros((self.vocab_size, 1)) # output bias
+
     self.Wxh = np.random.randn(hidden_size, self.vocab_size)/np.sqrt(self.vocab_size) # input to hidden
     self.Whh = np.random.randn(hidden_size, hidden_size)/np.sqrt(hidden_size) # hidden to hidden
     self.Why = np.random.randn(self.vocab_size, hidden_size)/np.sqrt(hidden_size) # hidden to output
+
     self.bh = np.zeros((hidden_size, 1)) # hidden bias
     self.by = np.zeros((self.vocab_size, 1)) # output bias
     
@@ -29,35 +37,41 @@ class RNN():
     hprev is Hx1 array of initial hidden state
     returns the loss, gradients on model parameters, and last hidden state
     """
-    xs, hs, ys, ps = {}, {}, {}, {}
-    hs[-1] = np.copy(hprev)
+    xs, hs, ys, ps = {}, {0:{},1:{}}, {}, {}
+    hs[0][-1], hs[1][-1] = np.copy(hprev), np.copy(hprev)
     loss = 0
     # forward pass
     for t in range(len(inputs)):
       xs[t] = np.zeros((self.vocab_size,1)) # encode in 1-of-k representation
       xs[t][inputs[t]] = 1
-      hs[t] = np.tanh(np.dot(self.Wxh, xs[t]) + np.dot(self.Whh, hs[t-1]) + self.bh) # hidden state
-      ys[t] = np.dot(self.Why, hs[t]) + self.by # unnormalized log probabilities for next chars
-      ps[t] = np.exp(ys[t]) / np.sum(np.exp(ys[t])) # probabilities for next chars
-      loss += -np.log(ps[t][targets[t],0]) # softmax (cross-entropy loss)
+      hs[0][t] = np.tanh(np.dot(self.Wxh, xs[t]) + np.dot(self.Whh, hs[0][t-1]) + self.bh) # hidden state
+    
+    for t in range(len(inputs)):
+      xs[t] = np.zeros((self.vocab_size,1)) # encode in 1-of-k representation
+      xs[t][inputs[t]] = 1
+      hs[1][t] = np.tanh(np.dot(self.Wxh, xs[t]) + np.dot(self.Whh, hs[0][t-1]) + self.bh + np.dot(self.Whu, hs[0][t]) + self.bu) # hidden state
+      ys[t] = np.dot(self.Why, hs[0][t]) + self.by # unnormalized log probabilities for next chars
+      ps[t] = np.exp(ys[0][t]) / np.sum(np.exp(ys[0][t])) # probabilities for next chars
+      loss += -np.log(ps[0][t][targets[t],0]) # softmax (cross-entropy loss)
+
     # backward pass: compute gradients going backwards
     dWxh, dWhh, dWhy = np.zeros_like(self.Wxh), np.zeros_like(self.Whh), np.zeros_like(self.Why)
     dbh, dby = np.zeros_like(self.bh), np.zeros_like(self.by)
-    dhnext = np.zeros_like(hs[0])
+    dhnext = np.zeros_like(hs[0][0])
     for t in reversed(range(len(inputs))):
-      dy = np.copy(ps[t])
+      dy = np.copy(ps[0][t])
       dy[targets[t]] -= 1 # backprop into y. see http://cs231n.github.io/neural-networks-case-study/#grad if confused here
       dWhy += np.dot(dy, hs[t].T)
       dby += dy
-      dh = np.dot(self.Why.T, dy) + dhnext # backprop into h
-      dhraw = (1 - hs[t] * hs[t]) * dh # backprop through tanh nonlinearity
-      dbh += dhraw
+      dh[1] = np.dot(self.Why.T, dy) + dhnext # backprop into h
+      dhraw[1] = (1 - hs[0][t] * hs[0][t]) * dh[1] # backprop through tanh nonlinearity
+      dbh[1] += dhraw[1]
       dWxh += np.dot(dhraw, xs[t].T)
-      dWhh += np.dot(dhraw, hs[t-1].T)
+      dWhh += np.dot(dhraw, hs[0][t-1].T)
       dhnext = np.dot(self.Whh.T, dhraw)
     for dparam in [dWxh, dWhh, dWhy, dbh, dby]:
       np.clip(dparam, -5, 5, out=dparam) # clip to mitigate exploding gradients
-    return loss, dWxh, dWhh, dWhy, dbh, dby, hs[len(inputs)-1]
+    return loss, dWxh, dWhh, dWhy, dbh, dby, hs[0][len(inputs)-1]
 
   def sample(self,h, seed_ix, n):
     """ 
@@ -77,7 +91,7 @@ class RNN():
       ixes.append(ix)
     return ixes
 
-  def train(self,seq_length, learning_rate = 1e-2 ,regularization = 1e-5,patience = 10):
+  def train(self,seq_length, learning_rate = 1e-2 ,regularization = 1e-5,patience = 6):
     # Optimizer configration
     self.config = {'learning_rate': learning_rate,
                        'regularization': regularization,
@@ -94,7 +108,7 @@ class RNN():
     losses = []
     #mWxh, mWhh, mWhy = np.zeros_like(self.Wxh), np.zeros_like(self.Whh), np.zeros_like(self.Why)
     #mbh, mby = np.zeros_like(self.bh), np.zeros_like(self.by) # memory variables for Adagrad
-    smooth_loss = -np.log(1.0/self.vocab_size) # loss at iteration 0
+    smooth_loss = -np.log(1.0/self.vocab_size)*seq_length # loss at iteration 0
     while True:
       # prepare inputs (we're sweeping from left to right in steps seq_length long)
       if p+seq_length+1 >= len(self.data) or n == 0: 
@@ -110,14 +124,13 @@ class RNN():
         print('----\n{} \n----'.format(txt, ))
         print('iter {}, loss: {}'.format(n, smooth_loss)) # print progress
         losses.append(smooth_loss)
-        if smooth_loss > min(losses) and decay_counter >= patience:
+        if smooth_loss > max(losses[-patience:]) and decay_counter >= patience:
           self.config['learning_rate'] *= 0.9
-          print("learning_rate: {}".format(self.config['learning_rate']))
+          print("learning_rate: {}".format(learning_rate))
           decay_counter = 0
-        decay_counter += 1
       # forward seq_length characters through the net and fetch gradient
       loss, dWxh, dWhh, dWhy, dbh, dby, hprev = self.lossFun(inputs, targets, hprev)
-      smooth_loss = smooth_loss * 0.999 + loss/seq_length * 0.001
+      smooth_loss = smooth_loss * 0.999 + loss * 0.001
       
       # perform parameter update with Adagrad
       self.Wxh, self.Whh, self.Why, self.bh, self.by, self.config = Adam(self.Wxh, self.Whh, self.Why, self.bh, self.by, dWxh, dWhh, dWhy, dbh, dby, self.config)
@@ -129,6 +142,7 @@ class RNN():
 
       p += seq_length # move data pointer
       n += 1 # iteration counter 
+      decay_counter += 1
 seq_length = 25
 learning_rate = 3e-4
 regularization = 1e-7
