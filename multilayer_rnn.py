@@ -16,19 +16,37 @@ class RNN():
     self.char_to_ix = { ch:i for i,ch in enumerate(chars) }
     self.ix_to_char = { i:ch for i,ch in enumerate(chars) }
  
+
+    self.Wxh = {}
+    self.Whh = {}
+    self.Why = {}
+    self.Whu = {}
+
+    self.bh = {}
+    self.by = {}
+    self.bu = {}
+
+
     self.Wxh[0] = np.random.randn(hidden_size, self.vocab_size)/np.sqrt(self.vocab_size) # input to hidden
     self.Whh[0] = np.random.randn(hidden_size, hidden_size)/np.sqrt(hidden_size) # hidden to hidden
-    self.Why(...) = np.random.randn(self.vocab_size, hidden_size)/np.sqrt(hidden_size) # hidden to output
+    self.Why[0] = np.random.randn(self.vocab_size, hidden_size)/np.sqrt(hidden_size) # hidden to output
+    self.Whu[0] = np.random.randn(self.vocab_size, hidden_size)/np.sqrt(hidden_size) # hidden to output
 
-    self.bh = np.zeros((hidden_size, 1)) # hidden bias
-    self.by = np.zeros((self.vocab_size, 1)) # output bias
+    self.bh[0] = np.zeros((hidden_size, 1)) # hidden bias
+    self.by[0] = np.zeros((self.vocab_size, 1)) # output bias
+    self.bu[0] = np.zeros((self.vocab_size, 1)) # inter layer bias
 
-    self.Wxh = np.random.randn(hidden_size, self.vocab_size)/np.sqrt(self.vocab_size) # input to hidden
-    self.Whh = np.random.randn(hidden_size, hidden_size)/np.sqrt(hidden_size) # hidden to hidden
-    self.Why = np.random.randn(self.vocab_size, hidden_size)/np.sqrt(hidden_size) # hidden to output
 
-    self.bh = np.zeros((hidden_size, 1)) # hidden bias
-    self.by = np.zeros((self.vocab_size, 1)) # output bias
+    self.Wxh[1] = np.random.randn(hidden_size, self.vocab_size)/np.sqrt(self.vocab_size) # input to hidden
+    self.Whh[1] = np.random.randn(hidden_size, hidden_size)/np.sqrt(hidden_size) # hidden to hidden
+    self.Why[1] = np.random.randn(self.vocab_size, hidden_size)/np.sqrt(hidden_size) # hidden to output
+    self.Whu[0] = np.random.randn(self.vocab_size, hidden_size)/np.sqrt(hidden_size) # hidden to output
+
+    self.bh[1] = np.zeros((hidden_size, 1)) # hidden bias
+    self.by[1] = np.zeros((self.vocab_size, 1)) # output bias
+    self.bu[1] = np.zeros((self.vocab_size, 1)) # inter layer bias
+
+
     
   
   def lossFun(self, inputs, targets, hprev):
@@ -47,17 +65,19 @@ class RNN():
       hs[0][t] = np.tanh(np.dot(self.Wxh, xs[t]) + np.dot(self.Whh, hs[0][t-1]) + self.bh) # hidden state
     
     for t in range(len(inputs)):
-      xs[t] = np.zeros((self.vocab_size,1)) # encode in 1-of-k representation
-      xs[t][inputs[t]] = 1
-      hs[1][t] = np.tanh(np.dot(self.Wxh, xs[t]) + np.dot(self.Whh, hs[0][t-1]) + self.bh + np.dot(self.Whu, hs[0][t]) + self.bu) # hidden state
+      hs[1][t] = np.tanh(np.dot(self.Whh, hs[1][t-1]) + self.bh + np.dot(self.Whu, hs[0][t]) + self.bu) # hidden state
       ys[t] = np.dot(self.Why, hs[0][t]) + self.by # unnormalized log probabilities for next chars
       ps[t] = np.exp(ys[0][t]) / np.sum(np.exp(ys[0][t])) # probabilities for next chars
       loss += -np.log(ps[0][t][targets[t],0]) # softmax (cross-entropy loss)
 
     # backward pass: compute gradients going backwards
-    dWxh, dWhh, dWhy = np.zeros_like(self.Wxh), np.zeros_like(self.Whh), np.zeros_like(self.Why)
-    dbh, dby = np.zeros_like(self.bh), np.zeros_like(self.by)
+    dWxh, dWhh, dWhy, dWhu = np.zeros_like(self.Wxh), np.zeros_like(self.Whh), np.zeros_like(self.Why), np.zeros_like(self.Whu)
+    dbh, dby, dbu = np.zeros_like(self.bh), np.zeros_like(self.by), np.zeros_like(self.bu)
     dhnext = np.zeros_like(hs[0][0])
+    dh = {}
+    dhraw = {}
+
+
     for t in reversed(range(len(inputs))):
       dy = np.copy(ps[0][t])
       dy[targets[t]] -= 1 # backprop into y. see http://cs231n.github.io/neural-networks-case-study/#grad if confused here
@@ -66,9 +86,24 @@ class RNN():
       dh[1] = np.dot(self.Why.T, dy) + dhnext # backprop into h
       dhraw[1] = (1 - hs[0][t] * hs[0][t]) * dh[1] # backprop through tanh nonlinearity
       dbh[1] += dhraw[1]
-      dWxh += np.dot(dhraw, xs[t].T)
-      dWhh += np.dot(dhraw, hs[0][t-1].T)
-      dhnext = np.dot(self.Whh.T, dhraw)
+      dWxh += np.dot(dhraw[1], xs[t].T)
+      dWhh += np.dot(dhraw[1], hs[0][t-1].T)
+      dhnext = np.dot(self.Whh.T, dhraw[1])
+
+      
+    for t in reversed(range(len(inputs))):
+      dy = np.copy(ps[0][t])
+      dy[targets[t]] -= 1 # backprop into y. see http://cs231n.github.io/neural-networks-case-study/#grad if confused here
+      dWhy += np.dot(dy, hs[t].T)
+      dby += dy
+      dh[1] = np.dot(self.Why.T, dy) + dhnext # backprop into h
+      dhraw[1] = (1 - hs[0][t] * hs[0][t]) * dh[1] # backprop through tanh nonlinearity
+      dbh[1] += dhraw[1]
+      dWxh += np.dot(dhraw[1], xs[t].T)
+      dWhh += np.dot(dhraw[1], hs[0][t-1].T)
+      dhnext = np.dot(self.Whh.T, dhraw[1])
+
+
     for dparam in [dWxh, dWhh, dWhy, dbh, dby]:
       np.clip(dparam, -5, 5, out=dparam) # clip to mitigate exploding gradients
     return loss, dWxh, dWhh, dWhy, dbh, dby, hs[0][len(inputs)-1]

@@ -9,7 +9,7 @@ class RNN():
   def __init__(self,hidden_size):
     self.hidden_size = 100 # size of hidden layer of neurons
     print("init")
-    self.data = open('/Users/eduardoleao/Documents/NN/rnn/data/way_of_kings.txt', 'r').read() # should be simple plain text file
+    self.data = open('C:/Users/twich/OneDrive/Documentos/NeuralNets/rnn/data/bee_gees.txt', 'r',encoding='utf8').read() # should be simple plain text file
     chars = list(set(self.data))
     data_size, self.vocab_size = len(self.data), len(chars)
     print('data has {} characters, {} unique.'.format(data_size, self.vocab_size))
