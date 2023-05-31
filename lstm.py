@@ -62,8 +62,8 @@ class LSTM():
             loss += -np.log(y_pred[t][np.argmax(x[t+1])])
             caches.append(cache)
 
-        caches = (caches,x)    
-        return a, c, y_pred, caches, loss/batch_size
+        caches = (caches,x)  
+        return a, c, y_pred, caches, float(loss)/batch_size
     
     def backward_step(self, da_next, dc_next, target, cache):
             
@@ -90,6 +90,7 @@ class LSTM():
         dWi = np.dot(dit,np.concatenate((a_prev, xt.T), axis=0).T)
         dWg = np.dot(dgt,np.concatenate((a_prev, xt.T), axis=0).T)
         dWo = np.dot(dot,np.concatenate((a_prev, xt.T), axis=0).T)
+        
         dbf = np.sum(dft,axis=1,keepdims=True)
         dbi = np.sum(dit,axis=1,keepdims=True) 
         dbg = np.sum(dgt,axis=1,keepdims=True) 
@@ -97,10 +98,12 @@ class LSTM():
 
     #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
         # Compute derivatives w.r.t previous hidden state, previous memory state and input.. 
-        if np.random.randint(10000)%5000==0:
-            print(parameters['Wf'].shape)
-            print(np.concatenate(a_prev, xt.T).shape)
-            print("========================")
+        # if np.random.randint(1000)%500==0:
+        #     print(dft.shape)
+        #     print(np.concatenate((a_prev, xt.T), axis=0).T.shape)
+        #     print(parameters['Wf'].shape)
+        #     print(parameters['Wf'][:,:a_size].shape)
+        #     print("========================")
         da_to_prev = np.dot(parameters['Wf'][:,:a_size].T,dft)+np.dot(parameters['Wi'][:,:a_size].T,dit)+np.dot(parameters['Wg'][:,:a_size].T,dgt)+np.dot(parameters['Wo'][:,:a_size].T,dot)
         da_prev = np.dot(parameters['Wy'].T, dyt) + da_to_prev
         dc_prev = dc_next*ft+ot*(1-np.square(np.tanh(c_next)))*ft*da_next 
@@ -123,47 +126,47 @@ class LSTM():
         batch_size, m, vocab_size = x.shape
         
         # initialize the gradients with the right sizes 
-        dx = np.zeros((batch_size, m, vocab_size))
-        da0 = np.zeros((a_size, m))
-        da_prevt = np.zeros((a_size, m))
-        dc_prevt = np.zeros((a_size, m))
-        dyt = np.zeros((vocab_size, m))
-        dWf = np.zeros((a_size, a_size + vocab_size))
-        dWi = np.zeros((a_size, a_size + vocab_size))
-        dWg = np.zeros((a_size, a_size + vocab_size))
-        dWo = np.zeros((a_size, a_size + vocab_size))
-        dWy = np.zeros((vocab_size, a_size))
-        dbf = np.zeros((a_size, 1))
-        dbi = np.zeros((a_size, 1))
-        dbg = np.zeros((a_size, 1))
-        dbo = np.zeros((a_size, 1))
-        dby = np.zeros((vocab_size, 1))
+        _dx = np.zeros((batch_size, m, vocab_size))
+        _da0 = np.zeros((a_size, m))
+        _da_prevt = np.zeros((a_size, m))
+        _dc_prevt = np.zeros((a_size, m))
+        _dyt = np.zeros((vocab_size, m))
+        _dWf = np.zeros((a_size, a_size + vocab_size))
+        _dWi = np.zeros((a_size, a_size + vocab_size))
+        _dWg = np.zeros((a_size, a_size + vocab_size))
+        _dWo = np.zeros((a_size, a_size + vocab_size))
+        _dWy = np.zeros((vocab_size, a_size))
+        _dbf = np.zeros((a_size, 1))
+        _dbi = np.zeros((a_size, 1))
+        _dbg = np.zeros((a_size, 1))
+        _dbo = np.zeros((a_size, 1))
+        _dby = np.zeros((vocab_size, 1))
 
         # loop back over the whole sequence
         for t in reversed(range(batch_size - 1)):
             # Compute all gradients using lstm_cell_backward
-            gradients = self.backward_step(da_prevt, dc_prevt, x[t+1], caches[t])
+            gradients = self.backward_step(_da_prevt, _dc_prevt, x[t+1], caches[t])
             # Store or add the gradient to the parameters' previous step's gradient
             #dx[t] = gradients["dxt"]
-            dWf += gradients["dWf"]
-            dWf += gradients["dWf"]
-            dWi += gradients["dWi"]
-            dWg += gradients["dWg"]
-            dWo += gradients["dWo"]
-            dWy += gradients["dWy"]
-            dbf += gradients["dbf"]
-            dbi += gradients["dbi"]
-            dbg += gradients["dbg"]
-            dbo += gradients["dbo"]
-            dby += gradients["dby"]
-            da_prevt = gradients['da_prev']
-            dc_prevt = gradients['dc_prev']
+            _dWf += gradients["dWf"]
+            _dWf += gradients["dWf"]
+            _dWi += gradients["dWi"]
+            _dWg += gradients["dWg"]
+            _dWo += gradients["dWo"]
+            _dWy += gradients["dWy"]
+            _dbf += gradients["dbf"]
+            _dbi += gradients["dbi"]
+            _dbg += gradients["dbg"]
+            _dbo += gradients["dbo"]
+            _dby += gradients["dby"]
+            _da_prevt = gradients['da_prev']
+            _dc_prevt = gradients['dc_prev']
         # Set the first activation's gradient to the backpropagated gradient da_prev.
         da0 = gradients["da_prev"]
         
         # Store the gradients in a python dictionary
-        gradients = {"dx": dx, "da0": da0, "dWf": dWf,"dbf": dbf, "dWi": dWi,"dbi": dbi,
-                    "dWg": dWg,"dbg": dbg, "dWo": dWo,"dbo": dbo, "dWy": dWy,"dby": dby}
+        gradients = {"dx": _dx, "da0": da0, "dWf": _dWf,"dbf": _dbf, "dWi": _dWi,"dbi": _dbi,
+                    "dWg": _dWg,"dbg": _dbg, "dWo": _dWo,"dbo": _dbo, "dWy": _dWy,"dby": _dby}
         
         return gradients
 
@@ -193,7 +196,6 @@ class LSTM():
                 params[key] -= gradients["d{}".format(key)]*learning_rate
             if n % 100 == 0:
                 print("Time step {}:\n Loss: {}".format(n,smooth_loss))
-            
             smooth_loss = 0.995 * smooth_loss + 0.005* loss
             s += batch_size
             n += 1

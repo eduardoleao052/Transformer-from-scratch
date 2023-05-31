@@ -53,3 +53,22 @@ def Momentum(Wxh, Whh, Wha, bh, ba, dWxh, dWhh, dWha, dbh, dba, config):
     next_ba =   ba - config['learning_rate'] * config['m_ba']
 
     return next_Wxh, next_Whh, next_Wha, next_bh, next_ba, config
+
+
+def Adam_LSTM(parameters, gradients, config):
+    for i in parameters.keys():
+        if i.startswith('W'):
+            config["m_{}".format(i)] = (config["m_{}".format(i)]*config['beta1'] + (1 - config['beta1']) * gradients['d{}'.format(i)]) / (1- config['beta1']**config['t'])
+            config["v_{}".format(i)] = (config["v_{}".format(i)]*config['beta2'] + (1 - config['beta2']) * np.square(gradients['d{}'.format(i)])) / (1- config['beta2']**config['t'])
+        
+            parameters[i] = parameters[i] - (config["learning_rate"] * config["m_{}".format(i)]) / (np.sqrt(config["v_{}".format(i)]) + config['epsilon']) - config['regularization'] * config['learning_rate'] * parameters[i]
+        
+        elif i.startswith('b'):
+            config["m_{}".format(i)] = (config["m_{}".format(i)]*config['beta1'] + (1 - config['beta1']) * gradients['d{}'.format(i)]) / (1- config['beta1']**config['t'])
+            config["v_{}".format(i)] = (config["v_{}".format(i)]*config['beta2'] + (1 - config['beta2']) * np.square(gradients['d{}'.format(i)])) / (1- config['beta2']**config['t'])
+        
+            parameters[i] = parameters[i] - (config["learning_rate"] * config["m_{}".format(i)]) / (np.sqrt(config["v_{}".format(i)]) + config['epsilon'])
+
+    config['t'] += 1
+
+    return parameters, config
