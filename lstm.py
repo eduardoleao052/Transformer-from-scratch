@@ -17,6 +17,7 @@ class LSTM():
                        'm_Wc':np.zeros(params["Wc"].shape), 'v_Wc':np.zeros(params["Wc"].shape),
                        'm_Wo':np.zeros(params["Wo"].shape), 'v_Wo':np.zeros(params["Wo"].shape),
                        'm_Wy':np.zeros(params["Wy"].shape), 'v_Wy':np.zeros(params["Wy"].shape),
+                       'm_Wx':np.zeros(params["Wx"].shape), 'v_Wx':np.zeros(params["Wx"].shape),
                        'm_bf':np.zeros(params["bf"].shape), 'v_bf':np.zeros(params["bf"].shape),
                        'm_bi':np.zeros(params["bi"].shape), 'v_bi':np.zeros(params["bi"].shape),
                        'm_bc':np.zeros(params["bc"].shape), 'v_bc':np.zeros(params["bc"].shape),
@@ -38,13 +39,17 @@ class LSTM():
         bo = parameters["bo"]
         Wy = parameters["Wy"] # prediction weight
         by = parameters["by"]
-        
+        Wx = parameters["Wx"]
+
         # Retrieve dimensions from shapes of xt and Wy
         n_x, m = xt.shape
         n_y, n_a = Wy.shape
 
+        # Encode xt:
+        xt_encoded = np.dot(Wx,xt)
+
         # Concatenate a_prev and xt 
-        concat = np.concatenate((a_prev,xt),axis=0)
+        concat = np.concatenate((a_prev,xt_encoded),axis=0)
         #print(a_prev.shape,xt.shape)
         # Compute values for ft, it, cct, c_next, ot, a_next using the formulas given 
         ft = sigmoid(np.dot(Wf, concat) + bf)
@@ -151,8 +156,9 @@ class LSTM():
         da_next = np.dot(parameters['Wf'][:,:n_a].T,dft)+np.dot(parameters['Wi'][:,:n_a].T,dit)+np.dot(parameters['Wc'][:,:n_a].T,dcct)+np.dot(parameters['Wo'][:,:n_a].T,dot) 
         dc_next = dc_prev*ft+ot*(1-np.square(np.tanh(c_next)))*ft*da_next 
         dxt = np.dot(parameters['Wf'][:,n_a:].T,dft)+np.dot(parameters['Wi'][:,n_a:].T,dit)+np.dot(parameters['Wc'][:,n_a:].T,dcct)+np.dot(parameters['Wo'][:,n_a:].T,dot) 
-    
-
+        
+        dx_encoded = np.dot(parameters['Wf'][:,n_a:].T,dft)+np.dot(parameters['Wi'][:,n_a:].T,dit)+np.dot(parameters['Wc'][:,n_a:].T,dcct)+np.dot(parameters['Wo'][:,n_a:].T,dot)
+        dWx = np.dot(dx_encoded,xt.T)
         # dby += dy
         # dh = np.dot(self.Why.T, dy) + dhnext # backprop into h
         # dhraw = (1 - hs[t] * hs[t]) * dh # backprop through tanh nonlinearity
@@ -161,10 +167,10 @@ class LSTM():
         # dWhh += np.dot(dhraw, hs[t-1].T)
         # dhnext = np.dot(self.Whh.T, dhraw)
 
-        for grad in [da_next, dc_next, dWi,dWo,dWf,dWc,dWy, dbo,dbi,dbf,dbc,dby]:
+        for grad in [da_next, dc_next, dWi,dWo,dWf,dWc,dWy,dWx, dbo,dbi,dbf,dbc,dby]:
             np.clip(grad, -5, 5, out=grad) # clip to mitigate exploding gradients
         # Save gradients in dictionary
-        gradients = {"dxt": dxt, "da_prev": da_prev, "dc_prev": dc_prev, "dWf": dWf,"dbf": dbf, "dWi": dWi,"dWy": dWy,"dbi": dbi,
+        gradients = {"dxt": dxt, "da_prev": da_prev, "dc_prev": dc_prev, "dWf": dWf,"dbf": dbf, "dWi": dWi,"dWy": dWy,"dWx": dWx,"dbi": dbi,
                     "dWc": dWc,"dbc": dbc, "dWo": dWo,"dbo": dbo, "dby": dby, "da_next": da_next, "dc_next": dc_next}
 
         return gradients, da_next, dc_next
@@ -189,6 +195,7 @@ class LSTM():
         dWc = np.zeros((n_a, n_a + n_x))
         dWo = np.zeros((n_a, n_a + n_x))
         dWy = np.zeros((n_x, n_a))
+        dWx = np.zeros((n_x, n_x))
         dbf = np.zeros((n_a, 1))
         dbi = np.zeros((n_a, 1))
         dbc = np.zeros((n_a, 1))
@@ -207,6 +214,7 @@ class LSTM():
             dWc += gradients["dWc"]
             dWo += gradients["dWo"]
             dWy += gradients["dWy"]
+            dWx += gradients["dWx"]
             dbf += gradients["dbf"]
             dbi += gradients["dbi"]
             dbc += gradients["dbc"]
@@ -217,16 +225,17 @@ class LSTM():
         
         # Store the gradients in a python dictionary
         gradients = {"dx": dx, "da0": da0, "dWf": dWf,"dbf": dbf, "dWi": dWi,"dbi": dbi,
-                    "dWc": dWc,"dbc": dbc, "dWo": dWo,"dbo": dbo,"dWy": dWy,"dby": dby}
+                    "dWc": dWc,"dbc": dbc, "dWo": dWo,"dbo": dbo,"dWy": dWy,"dby": dby,"dWx": dWx}
     
         return gradients
 
     def predict(self, a_0, c_0, seed, n, parameters):
         a = a_0.copy()
         c = c_0.copy()
+        x = seed
         idxs = []
         for t in range(n):
-            a, c, y, cache = self.lstm_cell_forward(seed, None, a, c, parameters)
+            a, c, y, _ = self.lstm_cell_forward(x, None, a, c, parameters)
             idx = np.argmax(y)
             x = np.zeros(y.shape) 
             x[idx] += 1
@@ -245,6 +254,7 @@ class LSTM():
         parameters["bo"] = np.random.randn(hidden_size,x.shape[1])
         parameters["Wy"] = np.random.randn(x.shape[0],hidden_size) # prediction weight
         parameters["by"] = np.random.randn(x.shape[0],x.shape[1])
+        parameters["Wx"] = np.random.randn(x.shape[0],x.shape[0]) # embedding weight
         self.initialize_adam(learning_rate,regularization,parameters)
 
         s = 0
@@ -256,6 +266,7 @@ class LSTM():
         decay_counter = 0 
         for n in range(n_steps):
             batch = x[:,:,s:s+batch_size]
+            #print([ix_to_char[np.argmax(i)] for i in batch.T])
             #print(batch.shape)
             a_t, _, c_t, caches, loss = self.lstm_forward(batch, a_0,c_0, parameters)
             a_0 = a_t[:,:,batch_size-1]
@@ -289,9 +300,9 @@ class LSTM():
         return
     
 
-hidden_size = 100 # size of hidden layer of neurons
-learning_rate = 3e-3
-regularization = 3e-8
+hidden_size = 300 # size of hidden layer of neurons
+learning_rate = 1e-2
+regularization = 3e-7
 
 print("init")
 data = open('C:/Users/twich/OneDrive/Documentos/NeuralNets/rnn/data/way_of_kings.txt', 'r', encoding = 'utf8').read() # should be simple plain text file
@@ -307,4 +318,4 @@ for i in range(len(x)):
     x_ohe[i][0][x[i]] = 1
 
 x_ohe = x_ohe.transpose(2,1,0)
-LSTM().train(x_ohe,n_steps = 100000, batch_size = 25, hidden_size = hidden_size,learning_rate = learning_rate,regularization = regularization,patience=7)
+LSTM().train(x_ohe,n_steps = 1000000, batch_size = 25, hidden_size = hidden_size,learning_rate = learning_rate,regularization = regularization,patience=7)
