@@ -1,6 +1,7 @@
 import numpy as np
 import logging
 import logging.handlers
+import os
 
 def add_padding(x,k):
     if k == 0:
@@ -108,7 +109,7 @@ def build_logger(sender, pwd):
 
     formatter = logging.Formatter("%(asctime)s:%(levelname)s: %(message)s")
 
-    file_handler = logging.FileHandler("/Users/eduardoleao/Documents/ML/NN/rnn/training.log")
+    file_handler = logging.FileHandler(f"{os.getcwd()}/training.log")
     smtpHandler = logging.handlers.SMTPHandler(
     mailhost=("smtp.gmail.com",587),
     fromaddr=sender,

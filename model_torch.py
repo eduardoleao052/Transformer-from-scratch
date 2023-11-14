@@ -1,5 +1,5 @@
 ﻿from layers_torch import TemporalDense, LSTM, RNN, TemporalSoftmax, TemporalBatchNorm, DeepMemoryLSTM
-import torch 
+import torch, torch.cuda
 import numpy as np
 from functions import build_logger
 import json
@@ -27,7 +27,7 @@ class Model:
         fcc3 = TemporalDense(250, vocab_size, device = device)  
         soft = TemporalSoftmax(device = device)
         self.layers = [fcc1,rnn1,fcc2,rnn2,fcc3,soft]
-
+        
     def load_text(self, file: str, val_size = 0.05) -> None:
         """
         Loads the text file into self.train_text and self.test_text,
@@ -90,7 +90,7 @@ class Model:
         self.ix_to_char = {i:ch for ch, i in self.char_to_ix.items()}
 
         for i, layer in enumerate(self.layers):
-            layer.params = {key: torch.tensor(value) for key, value in param_list[i].items()}
+            layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
             
     def sample(self, seed:str, n_timesteps:int) -> list:
         """
@@ -179,7 +179,7 @@ class Model:
             # calculate loss
             _, loss = self.layers[-1].backward(target_idxs,a)
 
-            test_losses.append(loss)
+            test_losses.append(loss.item())
             test_pointer += n_timesteps * batch_size # move data pointer
         return np.mean(test_losses)
 

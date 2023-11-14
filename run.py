@@ -1,7 +1,7 @@
 ﻿from model_torch import Model 
 from argparse import ArgumentParser
 import json
-import torch
+import torch, torch.cuda
 import os
 
 def test_model(sample_size,seed,load_path):
@@ -65,9 +65,10 @@ def parse_arguments():
 PATH = os.getcwd()
 
 if torch.cuda.is_available():
-    cuda_device = torch.device("cuda")
+    cuda_device = torch.device("cuda:0")
     device = cuda_device
     print ("Device: cuda")
+    torch.cuda.set_device(device)
 else:
     device = 'cpu'
     print ("CUDA device not found, using CPU")

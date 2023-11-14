@@ -1,5 +1,5 @@
 import numpy as np
-import torch
+import torch, torch.cuda
 
 def SGD(b,w,db,dw,config):
     next_w = w - config['learning_rate'] * dw - config['learning_rate'] * config['regularization'] * w

@@ -1,4 +1,4 @@
-﻿import torch 
+﻿import torch, torch.cuda
 import numpy as np
 from optimizers import TorchAdam, SGD_Momentum
 from functions import sigmoid, softmax
@@ -141,7 +141,6 @@ class TemporalDense:
     def forward(self, x):
         self.cache = []
         z = []
-
         for t in range(x.shape[1]):
             # Run forward pass, retrieve next h and append new cache
             zt, cache_t = self.forward_step(x[:, t])
@@ -153,6 +152,7 @@ class TemporalDense:
         return z
 
     def forward_step(self, xt):
+        
         zt = xt.matmul(self.params['W']) + self.params['b']
         cache_t = (xt, zt)
         return zt, cache_t
