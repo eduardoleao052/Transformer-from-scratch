@@ -1,6 +1,6 @@
 import numpy as np
-import pandas as pd
-import scipy.signal
+import logging
+import logging.handlers
 
 def add_padding(x,k):
     if k == 0:
@@ -45,11 +45,85 @@ def sigmoid(z, training = False):
         a = 1/(1+np.exp(-z))
         return a
 
+def clean_vocab(x, word):
+    if '\n' in word:
+        tokens_to_add = []
+        words_to_add = word.split('\n')
+        for i in words_to_add:
+            if i != '':
+               tokens_to_add.append(i)
+        clean_vocab(x,tokens_to_add[0])
+        for i in range(1,len(words_to_add)):
+            #x.append('\n')
+            clean_vocab(x,words_to_add[i])   
+        return
+    
+    if word.endswith(','):
+            clean_vocab(x, word[:-1])
+            x.append(',')
+    elif word.endswith('.'):
+            clean_vocab(x,word[:-1])
+            x.append('.')
+    elif word.endswith(':'):
+            clean_vocab(x,word[:-1])
+            x.append(':')
+    elif word.endswith('”'):
+            clean_vocab(x,word[:-1])
+            x.append('"')
+    elif word.endswith(')'):
+            clean_vocab(x,word[:-1])
+            x.append(')')
+    elif word.endswith('?'):
+            clean_vocab(x,word[:-1])
+            x.append('?')
+    elif word.endswith('!'):
+            clean_vocab(x,word[:-1])
+            x.append('!')
+    elif word.endswith(';'):
+            clean_vocab(x,word[:-1])
+            x.append(';')
+    elif word.endswith('...'):
+            clean_vocab(x,word[:-3])
+            x.append('...')
+    elif word.endswith("…"):
+            clean_vocab(x,word[:-1])
+            x.append('...')
+    elif word.startswith('“'):
+            x.append('"')
+            clean_vocab(x,word[1:])
+    elif word.startswith('('):
+            x.append('(')
+            clean_vocab(x,word[1:])
+    elif word.startswith('…'):
+            x.append('...')
+            clean_vocab(x,word[1:])
 
-#print(cross_correlate(x,y))
-#print(scipy.signal.correlate2d(x,y,mode = 'valid'))
-#x = add_padding(x,0)
-#print(x)
-#print(convolute(x,y))
-#print(scipy.signal.convolve2d(x,y,mode = 'valid'))
+    if (not word.endswith(',')) and (not word.endswith('.')) and (not word.endswith(':')) and (not word.endswith(';')) and (not word.endswith('…'))  and (not word.endswith('!')) and (not word.endswith('?')) and (not word.endswith(')')) and (not word.endswith('...')) and (not word.endswith('”')) and (not word.startswith('“')) and (not word.startswith('(')) and (not word.startswith('…')):
+        if word != '':
+            x.append(word)
+            
+def build_logger(sender, pwd):
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
 
+    formatter = logging.Formatter("%(asctime)s:%(levelname)s: %(message)s")
+
+    file_handler = logging.FileHandler("/Users/eduardoleao/Documents/ML/NN/rnn/training.log")
+    smtpHandler = logging.handlers.SMTPHandler(
+    mailhost=("smtp.gmail.com",587),
+    fromaddr=sender,
+    toaddrs=sender,
+    subject="Training Alert",
+    credentials=(sender, pwd),
+    secure=()
+    )
+
+    file_handler.setLevel(logging.INFO)
+    smtpHandler.setLevel(logging.WARNING)
+
+    file_handler.setFormatter(formatter)
+    smtpHandler.setFormatter(formatter)
+
+    logger.addHandler(smtpHandler)
+    logger.addHandler(file_handler)
+    return logger
