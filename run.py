@@ -1,18 +1,18 @@
 ﻿from layers import TemporalDense, RNN, LSTM, TemporalSoftmax, Embedding
 import numpy as np
 from model_torch import Model 
-import pandas as pd
 from argparse import ArgumentParser
 import json
 import torch
 
-if torch.cuda.is_available(): 
-    device = "cuda:0"
-    print ("Device: CUDA")
+if torch.cuda.is_available():
+    cuda_device = torch.device("cuda")
+    device = cuda_device
+    print ("Device: cuda")
 else:
     device = 'cpu'
-    print ("CUDA device not found, using CPU")
-
+    print ("MPS device not found, using CPU")
+device = 'cpu'
 
 def unittest_rnn(in_fcc = 100,in_rnn = 150,hidden = 200, hidden2 = 175, timesteps = 70, batch_size = 20, vocab_size = 50):
     # 100 timesteps, 20 batch-size, 50 encoding-size
@@ -68,8 +68,6 @@ def train_model(config_path, corpus):
                         config['learning_rate'],
                         config['regularization'],
                         config['patience'])
-    losses = pd.DataFrame(losses)
-    losses.to_csv('/Users/eduardoleao/Documents/ML/NN/rnn/metrics/rnn(150)_rnn(150)_metrics.csv', header=False)
 
 def fine_tune(config_path,corpus):
     model = Model(78)
@@ -84,7 +82,6 @@ def fine_tune(config_path,corpus):
                         config['learning_rate'],
                         config['regularization'],
                         config['patience'])
-    losses = pd.DataFrame(losses)
 
 def parse_arguments():
     parser = ArgumentParser(description='configuration of runtime application')
@@ -99,7 +96,8 @@ def parse_arguments():
                         help='path to configuration file for fine tuning/training the model')
     parser.add_argument('corpus', nargs='?', type=str, default='/Users/eduardoleao/Documents/ML/NN/rnn/data/sanderson.txt',
                         help='path to text corpus used to fine tune/train model')
-
+    parser.add_argument('save_path', nargs='?', type=str, default='/Users/eduardoleao/Documents/ML/NN/rnn/models/model_01.json',
+                        help='path to .json file where model will be stored')
 
     parser.add_argument('-sample_size',nargs='?', type=int, default=300,
                         help='number of characters/tokens to sample when generating test phrase')
@@ -119,9 +117,3 @@ if args.fine_tune:
 if args.test:
     test_model(args.sample_size, args.seed)
 
-# config = {"n_iter":150000,"n_timesteps":300,"batch_size":20,"learning_rate":0.001,"regularization":0.001,"patience":7}
-# config = json.dumps(config)
-# print(config)
-# file = open("/Users/eduardoleao/Documents/ML/NN/rnn/config.json", 'w')
-# file.write(config)
-# file.close()
