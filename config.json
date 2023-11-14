@@ -1,1 +1,1 @@
-{"n_iter": 150000, "n_timesteps": 2, "batch_size": 1, "learning_rate": 0.001, "regularization": 0.001, "patience": 7}
+{"n_iter": 150000, "n_timesteps": 500, "batch_size": 32, "learning_rate": 0.001, "regularization": 0.001, "patience": 7}
