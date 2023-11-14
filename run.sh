@@ -1,5 +1,5 @@
 #!/bin/bash
 echo "Initializing training of NLP model..."
-python3 run.py --fine_tune config.json shakespeare.txt model_shakespeare.json -load_path model_params_large.json
+python3 run.py --test config.json shakespeare.txt shake.json -load_path sander.json
 
 

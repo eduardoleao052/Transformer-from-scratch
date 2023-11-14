@@ -20,11 +20,11 @@ class Model:
         self.preloaded = False
         self.logger = build_logger('output.logger@gmail.com','bcof jupb ugbh vfll')
         self.vocab_size = vocab_size 
-        fcc1 = TemporalDense(vocab_size, 250, device = device)
-        rnn1 = RNN(250, 250, device = device)
-        fcc2 = TemporalDense(250, 250, device = device)  
-        rnn2 = RNN(250, 250, device = device)
-        fcc3 = TemporalDense(250, vocab_size, device = device)  
+        fcc1 = TemporalDense(vocab_size, 500, device = device)
+        rnn1 = RNN(500, 500, device = device)
+        fcc2 = TemporalDense(500, 500, device = device)  
+        rnn2 = RNN(500, 500, device = device)
+        fcc3 = TemporalDense(500, vocab_size, device = device)  
         soft = TemporalSoftmax(device = device)
         self.layers = [fcc1,rnn1,fcc2,rnn2,fcc3,soft]
         
@@ -58,6 +58,7 @@ class Model:
                 self.test_text += text_to_add
             else:
                 self.train_text += text_to_add
+        
 
     def save(self, path:str) -> None:
         """
@@ -224,6 +225,7 @@ class Model:
 
         smooth_loss = -np.log(1.0/self.vocab_size)
         for t in range(n_iter):
+            print(t)
             if pointer + (n_timesteps * batch_size ) + 1 >= len(self.train_text): 
                 pointer = np.random.randint(0,n_timesteps//2) # start from random point of data
             

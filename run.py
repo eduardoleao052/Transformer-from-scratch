@@ -5,12 +5,13 @@ import torch, torch.cuda
 import os
 
 def test_model(sample_size,seed,load_path):
-    model = Model(78,save_path='',device=device)
+    
+    model = Model(vocab_size, save_path='',device=device)
     model.load(f'{PATH}/models/{load_path}')
     print(seed + model.sample(seed,sample_size))
    
 def train_model(config_path, corpus, save_path):
-    model = Model(78, f'{PATH}/models/{save_path}', device=device)
+    model = Model(vocab_size, f'{PATH}/models/{save_path}', device=device)
     model.load_text(f'{PATH}/data/{corpus}')
     config = json.loads(open(f'{PATH}/{config_path}', 'r').read())
 
@@ -22,7 +23,7 @@ def train_model(config_path, corpus, save_path):
                         config['patience'])
 
 def fine_tune(config_path,corpus,save_path,load_path):
-    model = Model(78, f'{PATH}/models/{save_path}', device=device)
+    model = Model(vocab_size, f'{PATH}/models/{save_path}', device=device)
 
     model.load(f'{PATH}/models/{load_path}')
     model.load_text(f'{PATH}/data/{corpus}')
@@ -75,10 +76,16 @@ else:
 
 args = parse_arguments()
 
+
 if args.train:
+    vocab_size = len(set((open(f'{PATH}/data/{args.corpus}','r')).read()))
     train_model(args.config, args.corpus, args.save_path)
 if args.fine_tune:
+    vocab_size_to = len(set((open(f'{PATH}/data/{args.corpus}','r')).read()))
+    vocab_size_from = len(json.loads(open(f'{PATH}/models/{args.load_path}','r').read()).pop())
+    vocab_size = max(vocab_size_to,vocab_size_from)
     fine_tune(args.config, args.corpus, args.save_path, args.load_path)
 if args.test:
+    vocab_size = len(json.loads(open(f'{PATH}/models/{args.load_path}','r').read()).pop())
     test_model(args.sample_size, args.seed, args.load_path)
 
