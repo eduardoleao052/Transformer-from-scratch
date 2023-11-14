@@ -3,3 +3,4 @@ __pycache__/
 *.bin
 *.pyc
 .DS_Store
+training.log

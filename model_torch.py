@@ -5,15 +5,17 @@ from functions import build_logger
 import json
 
 class Model:
-    def __init__(self, vocab_size: int, device: str) -> None:
+    def __init__(self, vocab_size: int, save_path: str, device: str) -> None:
         """
         Initializes model. Has all layers setup with internal sizes.
 
         @param vocab_size (int): size of vocabulary (num of different words or characters),
         will be used as input and output sizes.
+        @param save_path (str): path to .json file that will store model params
         @param device (str): device to store tensors.
 
         """
+        self.save_path = save_path
         self.device = device
         self.preloaded = False
         self.logger = build_logger('output.logger@gmail.com','bcof jupb ugbh vfll')
@@ -257,7 +259,7 @@ class Model:
                     print("BREAK - learning_rate @ layer[0]: {}".format(self.layers[0].config['learning_rate']))
                     decay_counter = 0
                 if smooth_loss <= min(losses):
-                    self.save('/Users/eduardoleao/Documents/ML/NN/rnn/model_params.json')
+                    self.save(self.save_path)
                 decay_counter += 1
                 losses.append(smooth_loss)
                 test_losses.append(test_loss)
