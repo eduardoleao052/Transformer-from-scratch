@@ -6,14 +6,13 @@ from argparse import ArgumentParser
 import json
 import torch
 
-if torch.backends.mps.is_available():
-    mps_device = torch.device("mps")
-    device = mps_device
-    print ("Device: mps")
+if torch.cuda.is_available(): 
+    device = "cuda:0"
+    print ("Device: CUDA")
 else:
     device = 'cpu'
-    print ("MPS device not found, using CPU")
-device = 'cpu'
+    print ("CUDA device not found, using CPU")
+
 
 def unittest_rnn(in_fcc = 100,in_rnn = 150,hidden = 200, hidden2 = 175, timesteps = 70, batch_size = 20, vocab_size = 50):
     # 100 timesteps, 20 batch-size, 50 encoding-size
