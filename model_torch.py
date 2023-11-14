@@ -1,9 +1,7 @@
 ﻿from layers_torch import TemporalDense, LSTM, RNN, TemporalSoftmax, TemporalBatchNorm, DeepMemoryLSTM
-import os
 import torch 
 import numpy as np
 from functions import build_logger
-import pandas as pd
 import json
 
 class Model:
@@ -22,11 +20,11 @@ class Model:
         self.vocab_size = vocab_size 
         fcc1 = TemporalDense(vocab_size, 250, device = device)
         rnn1 = RNN(250, 250, device = device)
-        fcc2 = TemporalDense(250, vocab_size, device = device)  
+        fcc2 = TemporalDense(250, 250, device = device)  
         rnn2 = RNN(250, 250, device = device)
         fcc3 = TemporalDense(250, vocab_size, device = device)  
         soft = TemporalSoftmax(device = device)
-        self.layers = [fcc1,rnn,fcc2,soft]
+        self.layers = [fcc1,rnn1,fcc2,rnn2,fcc3,soft]
 
     def load_text(self, file: str, val_size = 0.05) -> None:
         """
@@ -90,7 +88,7 @@ class Model:
         self.ix_to_char = {i:ch for ch, i in self.char_to_ix.items()}
 
         for i, layer in enumerate(self.layers):
-            layer.params = {key: torch.array(value) for key, value in param_list[i].items()}
+            layer.params = {key: torch.tensor(value) for key, value in param_list[i].items()}
             
     def sample(self, seed:str, n_timesteps:int) -> list:
         """
