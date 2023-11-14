@@ -9,7 +9,7 @@ class RNN():
   def __init__(self,hidden_size):
     self.hidden_size = 100 # size of hidden layer of neurons
     print("init")
-    self.data = open('C:/Users/twich/OneDrive/Documentos/NeuralNets/rnn/data/bee_gees.txt', 'r',encoding='utf8').read() # should be simple plain text file
+    self.data = open('C:/Users/twich/OneDrive/Documentos/NeuralNets/rnn/data/way_of_kings.txt', 'r',encoding='utf8').read() # should be simple plain text file
     chars = list(set(self.data))
     data_size, self.vocab_size = len(self.data), len(chars)
     print('data has {} characters, {} unique.'.format(data_size, self.vocab_size))
@@ -32,6 +32,7 @@ class RNN():
     xs, hs, ys, ps = {}, {}, {}, {}
     hs[-1] = np.copy(hprev)
     loss = 0
+    acc = 0
     # forward pass
     for t in range(len(inputs)):
       xs[t] = np.zeros((self.vocab_size,1)) # encode in 1-of-k representation
@@ -40,6 +41,8 @@ class RNN():
       ys[t] = np.dot(self.Why, hs[t]) + self.by # unnormalized log probabilities for next chars
       ps[t] = np.exp(ys[t]) / np.sum(np.exp(ys[t])) # probabilities for next chars
       loss += -np.log(ps[t][targets[t],0]) # softmax (cross-entropy loss)
+      if np.argmax(ps[t]) == targets[t]:
+        acc += 1
     # backward pass: compute gradients going backwards
     dWxh, dWhh, dWhy = np.zeros_like(self.Wxh), np.zeros_like(self.Whh), np.zeros_like(self.Why)
     dbh, dby = np.zeros_like(self.bh), np.zeros_like(self.by)
@@ -57,7 +60,7 @@ class RNN():
       dhnext = np.dot(self.Whh.T, dhraw)
     for dparam in [dWxh, dWhh, dWhy, dbh, dby]:
       np.clip(dparam, -5, 5, out=dparam) # clip to mitigate exploding gradients
-    return loss, dWxh, dWhh, dWhy, dbh, dby, hs[len(inputs)-1]
+    return loss,acc, dWxh, dWhh, dWhy, dbh, dby, hs[len(inputs)-1]
 
   def sample(self,h, seed_ix, n):
     """ 
@@ -95,6 +98,7 @@ class RNN():
     #mWxh, mWhh, mWhy = np.zeros_like(self.Wxh), np.zeros_like(self.Whh), np.zeros_like(self.Why)
     #mbh, mby = np.zeros_like(self.bh), np.zeros_like(self.by) # memory variables for Adagrad
     smooth_loss = -np.log(1.0/self.vocab_size) # loss at iteration 0
+    smooth_acc = 1/self.vocab_size
     while True:
       # prepare inputs (we're sweeping from left to right in steps seq_length long)
       if p+seq_length+1 >= len(self.data) or n == 0: 
@@ -104,11 +108,11 @@ class RNN():
       targets = [self.char_to_ix[ch] for ch in self.data[p+1:p+seq_length+1]]
 
       # sample from the model now and then
-      if n % 1000 == 0:
+      if n % 8000 == 0:
         sample_ix = self.sample(hprev, inputs[0], 200)
         txt = ''.join(self.ix_to_char[ix] for ix in sample_ix)
         print('----\n{} \n----'.format(txt, ))
-        print('iter {}, loss: {}'.format(n, smooth_loss)) # print progress
+        print('iter {}, loss: {}, acc: {}'.format(n, smooth_loss, smooth_acc)) # print progress
         losses.append(smooth_loss)
         if smooth_loss > min(losses) and decay_counter >= patience:
           self.config['learning_rate'] *= 0.9
@@ -116,9 +120,9 @@ class RNN():
           decay_counter = 0
         decay_counter += 1
       # forward seq_length characters through the net and fetch gradient
-      loss, dWxh, dWhh, dWhy, dbh, dby, hprev = self.lossFun(inputs, targets, hprev)
-      smooth_loss = smooth_loss * 0.999 + loss/seq_length * 0.001
-      
+      loss, acc, dWxh, dWhh, dWhy, dbh, dby, hprev = self.lossFun(inputs, targets, hprev)
+      smooth_loss = smooth_loss * 0.99 + loss/seq_length * 0.01
+      smooth_acc = smooth_acc * 0.99 + acc/seq_length * 0.01
       # perform parameter update with Adagrad
       self.Wxh, self.Whh, self.Why, self.bh, self.by, self.config = Adam(self.Wxh, self.Whh, self.Why, self.bh, self.by, dWxh, dWhh, dWhy, dbh, dby, self.config)
       #for param, dparam, mem in zip([self.Wxh, self.Whh, self.Why, self.bh, self.by], 
