@@ -184,21 +184,26 @@ class Model:
         return np.mean(test_losses)
 
     def _get_batch(self,text,pointer,n_timesteps,batch_size):
-        input_idxs = torch.zeros([batch_size,n_timesteps], device=(self.device))
-        target_idxs = torch.zeros([batch_size,n_timesteps], device=(self.device))
+        print("a1") 
+        input_idxs = torch.zeros([batch_size,n_timesteps], device=(self.device),dtype=torch.long)
+        target_idxs = torch.zeros([batch_size,n_timesteps], device=(self.device),dtype=torch.long)
+        print("a2") 
         for b in range(batch_size):
+            print(b) 
             input_idxs[b,:] = torch.tensor([self.char_to_ix[ch] for ch in text[
                 pointer + ((b)*n_timesteps): pointer + ((b+1)*n_timesteps)
-                ]],device=self.device)
+                ]],device=self.device,dtype=torch.int32)
             target_idxs[b,:] = torch.tensor([int(self.char_to_ix[ch]) for ch in text[
                 1 + pointer + ((b)*n_timesteps): 1 + pointer + ((b+1)*n_timesteps)
-                ]],device=self.device)
-
+                ]],device=self.device,dtype=torch.int32)
+        print("b1") 
         inputs = torch.zeros((batch_size, n_timesteps, self.vocab_size),device=self.device)
-        for b, batch in enumerate(inputs):
-            for time, timestep in enumerate(batch):
-                timestep[int(input_idxs[b,time])] += 1
-
+ 
+        inputs = torch.nn.functional.one_hot(input_idxs, num_classes=self.vocab_size)
+        # for b, batch in enumerate(inputs):
+        #     for time, timestep in enumerate(batch):
+        #         timestep[int(input_idxs[b,time])] += 1
+        print("b2") 
         return inputs, input_idxs, target_idxs
     
     def train(self, n_iter: int, n_timesteps: int, batch_size: int,learning_rate=1e-3,regularization=1e-3,patience = 7) -> None: 
@@ -223,17 +228,19 @@ class Model:
 
         smooth_loss = -np.log(1.0/self.vocab_size)
         for t in range(n_iter):
+            print(f"====================================={t}")
             if pointer + (n_timesteps * batch_size ) + 1 >= len(self.train_text): 
                 pointer = np.random.randint(0,n_timesteps//2) # start from random point of data
-
+            
             inputs, _, target_idxs = self._get_batch(self.train_text, pointer, n_timesteps, batch_size)
-                    
+                
             a = inputs.clone()
+              
             # forward pass
             for layer in self.layers:
                 # layer.initialize_optimizer(learning_rate, regularization)
                 a = layer.forward(a)
-
+            
             # calculate loss
             dz, loss = self.layers[-1].backward(target_idxs,a)
 
@@ -243,7 +250,7 @@ class Model:
                 dz = layer.backward(dz)
                 layer.optimize()
             self.layers.reverse()
-            
+             
             smooth_loss = 0.99 * smooth_loss + 0.01 * loss
             # sample from the model now and then
             if t % 500 == 0:
