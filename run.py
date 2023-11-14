@@ -1,6 +1,4 @@
-﻿from layers import TemporalDense, RNN, LSTM, TemporalSoftmax, Embedding
-import numpy as np
-from model_torch import Model 
+﻿from model_torch import Model 
 from argparse import ArgumentParser
 import json
 import torch
@@ -11,15 +9,16 @@ if torch.cuda.is_available():
     print ("Device: cuda")
 else:
     device = 'cpu'
-    print ("Cuda device not found, using CPU")
+    print ("CUDA device not found, using CPU")
 
-def test_model(sample_size,seed):
+
+def test_model(sample_size,seed,file):
     model = Model(78)
-    model.load('/Users/eduardoleao/Documents/ML/NN/rnn/model_params.json')
+    model.load(file)
     print(seed + model.sample(seed,sample_size))
    
-def train_model(config_path, corpus):
-    model = Model(78, device = device)
+def train_model(config_path, corpus, save_path):
+    model = Model(78, save_path, device = device)
     model.load_text(corpus)
     config = json.loads(open(config_path, 'r').read())
 
@@ -30,10 +29,10 @@ def train_model(config_path, corpus):
                         config['regularization'],
                         config['patience'])
 
-def fine_tune(config_path,corpus):
+def fine_tune(config_path,corpus,file):
     model = Model(78)
 
-    model.load('/Users/eduardoleao/Documents/ML/NN/rnn/model_params.json')
+    model.load(file)
     model.load_text(corpus)
     config = json.loads(open(config_path, 'r').read())
 
@@ -53,17 +52,19 @@ def parse_arguments():
     parser.add_argument('--test', action='store_true',
                         help='test the model with provided text sample_size (default = 300) and seed')
 
-    parser.add_argument('config', nargs='?', type=str, default='/Users/eduardoleao/Documents/ML/NN/rnn/config.json',
+    parser.add_argument('config', nargs='?', type=str, default=r'C:\Users\twich\OneDrive\Documentos\NeuralNets\rnn\config.json',
                         help='path to configuration file for fine tuning/training the model')
-    parser.add_argument('corpus', nargs='?', type=str, default='/Users/eduardoleao/Documents/ML/NN/rnn/data/sanderson.txt',
+    parser.add_argument('corpus', nargs='?', type=str, default=r'C:\Users\twich\OneDrive\Documentos\NeuralNets\rnn\data\sanderson.txt',
                         help='path to text corpus used to fine tune/train model')
-    parser.add_argument('save_path', nargs='?', type=str, default='/Users/eduardoleao/Documents/ML/NN/rnn/models/model_01.json',
+    parser.add_argument('save_path', nargs='?', type=str, default=r'C:\Users\twich\OneDrive\Documentos\NeuralNets\rnn\models\model_01.json',
                         help='path to .json file where model will be stored')
 
     parser.add_argument('-sample_size',nargs='?', type=int, default=300,
                         help='number of characters/tokens to sample when generating test phrase')
     parser.add_argument('-seed',nargs='?', default="Shallan opened her book and began to read it, and then ",
                         help='used seed')
+    parser.add_argument('-file',nargs='?', default=r"C:\Users\twich\OneDrive\Documentos\NeuralNets\rnn\models\model_01.json",
+                        help='path to file with model parameters to be loaded')
 
     args = parser.parse_args()
 
@@ -72,9 +73,9 @@ def parse_arguments():
 args = parse_arguments()
 
 if args.train:
-    train_model(args.config, args.corpus)
+    train_model(args.config, args.corpus, args.save_path)
 if args.fine_tune:
-    fine_tune(args.config, args.corpus)
+    fine_tune(args.config, args.corpus, args.file)
 if args.test:
-    test_model(args.sample_size, args.seed)
+    test_model(args.sample_size, args.seed, args.file)
 
