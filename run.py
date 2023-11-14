@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import json
 import torch
 
+
 if torch.cuda.is_available():
     cuda_device = torch.device("cuda")
     device = cuda_device
@@ -29,8 +30,8 @@ def train_model(config_path, corpus, save_path):
                         config['regularization'],
                         config['patience'])
 
-def fine_tune(config_path,corpus,file):
-    model = Model(78)
+def fine_tune(config_path,corpus):
+    model = Model(78,device=device)
 
     model.load(file)
     model.load_text(corpus)
