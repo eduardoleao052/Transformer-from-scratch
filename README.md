@@ -21,9 +21,9 @@ pip install -r requirements.txt
 - To run, install the necessary requirements and a text corpus (any text you wish to replicate, .txt format).
 - Please download your text file in the data directory.
 #### Pretraining
-- To pretrain a RNN on language modeling (predicting next character), go into run.sh and set the flag to --train, chose your configuration file (config.json is the default), text corpus file_name (should be inside data directory), and a -to_path (.json file that will store the model).
+- To pretrain a RNN on language modeling (predicting next character), go into run.sh and set the flag to --train, chose your configuration file (config.json is the default), text corpus file_name (should be inside data directory), and a -to_path (.json file that will store the model - you do not need to create it, just provide a name).
 ```
-python3 run.py --train config.json your_text_file.txt -to_path path_to_json_that_stores_model.json
+python3 run.py --train config.json your_text_file.txt -to_path name_of_json_that_will_store_model.json
 ```
 - run on terminal:
 ```
@@ -32,15 +32,19 @@ python3 run.py --train config.json your_text_file.txt -to_path path_to_json_that
 - Whenever you feel like the samples are good enough, you can kill the training at any time. This will NOT corrupt the model saved .json file, and you may proceed to testing and fine_tuning on smaller datasets.
 - Note: for pretraining, a really large text corpus is usually necessary. I obtained good results with ~1M characters.
 - Note: if you want to alter layers/dimensions, do so in the __init__ of Model at model_torch.py.
+  
 #### Fine-tuning
-- To fine-tune your RNN, go into run.sh and set the flag to --fine_tune, chose your configuration file (config.json is the default), new text corpus file_name (should be inside data directory), a -to_path (.json file that will store the model) and a -from_path (.json file that contains pretrained model).
+- To fine-tune your RNN, go into run.sh and set the flag to --fine_tune, chose your configuration file (config.json is the default), new text corpus file_name (should be inside data directory), a -to_path (.json file that will store the model - you do not need to create it, just provide a name) and a -from_path (.json file that contains pretrained model).
 ```
-python3 run.py --train config.json your_text_file.txt -to_path path_to_json_that_stores_model.json
+python3 run.py --fine_tune config.json your_text_file.txt -to_path name_of_json_that_will_store_model.json -from_path name_of_pretrained_model_file.json
 ```
 - run on terminal:
 ```
 ./run.sh
 ```
-- Note: for pretraining, a really large text corpus is usually necessary. I obtained good results with ~1M characters.
+- Note: for fine-tuning, a you can get adventurous with smaller text files. I obtained really nice results with ~10K characters, such as a small Shakespeare dataset and Bee Gees' songs.
 ### Results
-- The Convolutional Neural Network implementation in main.py achieved 99.36% accuracy on the validation set of the MNIST handwritten digit dataset.
+- The Recurrent Neural Network implementation in main.py achieved a loss of 1.22 with a 78 vocabulary size and ~2M tokens of training for 100,000 timesteps (32 batch_size, 200 n_iterations).
+- The LSTM achieved a loss of 1.11 with the same settings.
+- Training times seemed to be a little faster with GPU, but the improvement was not dramatic (maybe due to iterative and non-paralellizeable nature of RNNs).
+- Total training times: RNN ~4h, LSTM ~10h on one GTX1070 Nvidia GPU.
