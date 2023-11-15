@@ -21,9 +21,9 @@ class Model:
         self.logger = build_logger('output.logger@gmail.com','bcof jupb ugbh vfll')
         self.vocab_size = vocab_size 
         fcc1 = TemporalDense(vocab_size, 500, device = device)
-        rnn1 = RNN(500, 500, device = device)
+        rnn1 = LSTM(500, 500, device = device)
         fcc2 = TemporalDense(500, 500, device = device)  
-        rnn2 = RNN(500, 500, device = device)
+        rnn2 = LSTM(500, 500, device = device)
         fcc3 = TemporalDense(500, vocab_size, device = device)  
         soft = TemporalSoftmax(device = device)
         self.layers = [fcc1,rnn1,fcc2,rnn2,fcc3,soft]
@@ -237,12 +237,12 @@ class Model:
 
         smooth_loss = -np.log(1.0/self.vocab_size)
         for t in range(n_iter):
-            print(t)
+            
             if pointer + (n_timesteps * batch_size ) + 1 >= len(self.train_text): 
                 pointer = np.random.randint(0,n_timesteps//2) # start from random point of data
             
             inputs, _, target_idxs = self._get_batch(self.train_text, pointer, n_timesteps, batch_size)
-                
+            
             a = inputs.clone()
               
             # forward pass
@@ -252,17 +252,15 @@ class Model:
             
             # calculate loss
             dz, loss = self.layers[-1].backward(target_idxs,a)
-
             # backward pass
             self.layers.reverse()
             for layer in self.layers[1:]:
                 dz = layer.backward(dz)
                 layer.optimize()
             self.layers.reverse()
-             
             smooth_loss = 0.99 * smooth_loss + 0.01 * loss
             # sample from the model now and then
-            if t % 30 == 0:
+            if t % 200 == 0:
                 txt = self.sample('. ', 500)
                 print("#=========#\n{}\n#=========#".format(txt))
                 test_loss = self.test(n_timesteps, batch_size)

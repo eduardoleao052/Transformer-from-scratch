@@ -333,9 +333,9 @@ class LSTM:
 
     def forward_step(self, xt, h_prev, c_prev):
         a = torch.matmul(xt, self.params['Wxa']) + torch.matmul(h_prev, self.params['Wha']) + self.params['ba']
-        a = torch.split(a, 4, axis=1)
+        a = torch.split(a, self.hidden_size, dim=1)
+
         i, f, o, g = sigmoid(a[0]), sigmoid(a[1]), sigmoid(a[2]), torch.tanh(a[3])
-        
         c_next = f * c_prev
         c_next += i*g
         h_next =  o * torch.tanh(c_next)
@@ -365,7 +365,7 @@ class LSTM:
             self.grads['dba'] += dba_t
 
             for key in self.grads.keys():
-                module_grad = np.sqrt(torch.sum(self.grads[key]**2))
+                module_grad = torch.sqrt(torch.sum(self.grads[key]**2))
                 if module_grad >= 20:
                     self.grads[key] = (self.grads[key] / module_grad) * 20
 
@@ -462,14 +462,14 @@ class DeepMemoryLSTM:
 
     def forward_step(self, xt, h_prev, c_prev, m_prev):
         a = torch.matmul(xt, self.params['Wxa']) + torch.matmul(h_prev, self.params['Wha']) + self.params['ba']
-        a = torch.split(a, 4, axis=1)
+        a = torch.split(a, 4, dim=1)
         i, f, o, g = sigmoid(a[0]), sigmoid(a[1]), sigmoid(a[2]), torch.tanh(a[3])
         
         c_next = f * c_prev
         c_next += i*g
 
         am = torch.matmul(xt, self.params['Wxm']) + torch.matmul(c_next, self.params['Wcm']) + self.params['bm']
-        am = torch.split(am, 3, axis=1)
+        am = torch.split(am, 3, dim==1)
         im, fm, om = sigmoid(am[0]), sigmoid(am[1]), sigmoid(am[2])
         
         m_next = fm * m_prev

@@ -2,6 +2,7 @@ import numpy as np
 import logging
 import logging.handlers
 import os
+import torch
 
 def add_padding(x,k):
     if k == 0:
@@ -43,7 +44,7 @@ def softmax(z, training = False):
 
 def sigmoid(z, training = False):
         #z= np.max(z,axis=1,keepdims=True)
-        a = 1/(1+np.exp(-z))
+        a = 1/(1+torch.exp(-z))
         return a
 
 def clean_vocab(x, word):
