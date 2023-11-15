@@ -76,15 +76,14 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
     print ("CUDA device not found, using CPU")
-
 args = parse_arguments()
 
 
 if args.train:
-    vocab_size = len(set((open(f'{PATH}/data/{args.corpus}','r')).read()))
+    vocab_size = len(set((open(f'{PATH}/data/{args.corpus}','r',encoding='utf8')).read()))
     train_model(args.config, args.corpus, args.to_path)
 if args.fine_tune:
-    vocab_size_to = len(set((open(f'{PATH}/data/{args.corpus}','r')).read()))
+    vocab_size_to = len(set((open(f'{PATH}/data/{args.corpus}','r',encoding='utf8')).read()))
     vocab_size_from = len(json.loads(open(f'{PATH}/models/{args.from_path}','r').read()).pop())
     vocab_size = max(vocab_size_to,vocab_size_from)
     print(vocab_size)
