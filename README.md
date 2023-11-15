@@ -61,7 +61,7 @@ python3 run.py --test -sample_size 400 -seed  -from_path name_of_pretrained_mode
 - The LSTM achieved a loss of 1.11 with the same settings.
 - Training times seemed to be a little faster with GPU, but the improvement was not dramatic (maybe due to iterative and non-paralellizeable nature of RNNs).
 - Total training times: RNN ~4h, LSTM ~10h on one GTX1070 Nvidia GPU.
-- Result with ~3h of pretraining on RNN and <i>tiny_shakespeare</i> dataset:
+- Result with ~4h of pretraining on reduced version of COCA (around 10M tokens) and ~1h of fine-tuning on <i>tiny_shakespeare</i> dataset:
   
 ```
 CORIOLANUS:
@@ -90,3 +90,5 @@ For that O, they say they shall, for son that studies soul
 Having done,
 And this is the rest in this in a fellow.
 ```
+- Note: results achieved with the model configuration exactly as presented in this repo.
+- Thanks for reading!
