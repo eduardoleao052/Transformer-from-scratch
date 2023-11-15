@@ -45,18 +45,18 @@ def parse_arguments():
     parser.add_argument('--test', action='store_true',
                         help='test the model with provided text sample_size (default = 300) and seed')
 
-    parser.add_argument('config', nargs='?', type=str, default=f"{PATH}/config.json",
+    parser.add_argument('--config', nargs='?', type=str, default=f"{PATH}/config.json",
                         help='path to configuration file for fine tuning/training the model')
-    parser.add_argument('corpus', nargs='?', type=str, default=f"{PATH}/data/sanderson.txt",
+    parser.add_argument('--corpus', nargs='?', type=str, default=f"{PATH}/data/sanderson.txt",
                         help='path to text corpus used to fine tune/train model')
-    parser.add_argument('-to_path', nargs='?', type=str, default=f"{PATH}/models/model_01.json",
+    parser.add_argument('--to_path', nargs='?', type=str, default=f"{PATH}/models/model_01.json",
                         help='path to .json file where model will be stored')
 
-    parser.add_argument('-sample_size',nargs='?', type=int, default=300,
+    parser.add_argument('--sample_size',nargs='?', type=int, default=300,
                         help='number of characters/tokens to sample when generating test phrase')
-    parser.add_argument('-seed',nargs='?', default="Shallan opened her book and began to read it, and then ",
+    parser.add_argument('--seed',nargs='?', default="Shallan opened her book and began to read it, and then ",
                         help='used seed')
-    parser.add_argument('-from_path',nargs='?', default=f"{PATH}/models/model_01.json",
+    parser.add_argument('--from_path',nargs='?', default=f"{PATH}/models/model_01.json",
                         help='path to file with model parameters to be loaded')
 
     args = parser.parse_args()
