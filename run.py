@@ -70,6 +70,9 @@ if torch.cuda.is_available():
     device = cuda_device
     print ("Device: cuda")
     torch.cuda.set_device(device)
+# elif torch.backends.mps.is_available():
+#     device = torch.device('mps:0')
+#     print ("Device: mps")
 else:
     device = 'cpu'
     print ("CUDA device not found, using CPU")
@@ -84,7 +87,10 @@ if args.fine_tune:
     vocab_size_to = len(set((open(f'{PATH}/data/{args.corpus}','r')).read()))
     vocab_size_from = len(json.loads(open(f'{PATH}/models/{args.from_path}','r').read()).pop())
     vocab_size = max(vocab_size_to,vocab_size_from)
+    print(vocab_size)
+    print(args.corpus)
     fine_tune(args.config, args.corpus, args.to_path, args.from_path)
+    
 if args.test:
     vocab_size = len(json.loads(open(f'{PATH}/models/{args.from_path}','r').read()).pop())
     test_model(args.sample_size, args.seed, args.from_path)

@@ -20,11 +20,11 @@ class Model:
         self.preloaded = False
         self.logger = build_logger('output.logger@gmail.com','bcof jupb ugbh vfll')
         self.vocab_size = vocab_size 
-        fcc1 = TemporalDense(vocab_size, 500, device = device)
-        rnn1 = RNN(500, 500, device = device)
-        fcc2 = TemporalDense(500, 500, device = device)  
-        rnn2 = RNN(500, 500, device = device)
-        fcc3 = TemporalDense(500, vocab_size, device = device)  
+        fcc1 = TemporalDense(vocab_size, 250, device = device)
+        rnn1 = RNN(250, 250, device = device)
+        fcc2 = TemporalDense(250, 250, device = device)  
+        rnn2 = RNN(250, 250, device = device)
+        fcc3 = TemporalDense(250, vocab_size, device = device)  
         soft = TemporalSoftmax(device = device)
         self.layers = [fcc1,rnn1,fcc2,rnn2,fcc3,soft]
         
@@ -112,14 +112,12 @@ class Model:
         for t, timestep in enumerate(inputs[0]):
             timestep[idx[t]] += 1
 
-        with torch.no_grad():
-            # iterate through seed, build hidden and cell states of layers:
-            self.a = inputs.clone()
-            for layer in self.layers:
-                self.a = layer.forward(self.a)
-        
-        
-           
+    
+        # iterate through seed, build hidden and cell states of layers:
+        self.a = inputs.clone()
+        for layer in self.layers:
+            self.a = layer.forward(self.a)
+
 
         # get last word for generation ([:,-1] to eliminate the [timesteps] dimension)    
         self.a = self.a[:,-1]
@@ -184,23 +182,37 @@ class Model:
             test_pointer += n_timesteps * batch_size # move data pointer
         return np.mean(test_losses)
 
-    def _get_batch(self,text,pointer,n_timesteps,batch_size):
-        N, T, V = batch_size, n_timesteps, self.vocab_size
-        input_idxs = torch.zeros([N,T], device=(self.device),dtype=torch.int32)
-        target_idxs = torch.zeros([N,T], device=(self.device),dtype=torch.int32)
+    def _get_batch(self, text:str, pointer:int, n_timesteps:int, batch_size:int) -> tuple:
+        """
+        Runs batched forward passes through the entire validation dataset (self.test_text)
+        and computes the average of the test loss.
+
+        @param text (str): entire corpus of text
+        @param pointer (int): index (location in the text) in current epoch
+        @param n_timesteps (int): number of characters per sequence
+        @param batch_size (int): number of sequences per batch
+
+        @returns inputs (torch.tensor): one_hot_encoded vector of inputs (shape N,T,Vocab)
+        @returns inputs_idxs (torch.tensor): vector of input indexes (shape N,T)
+        @returns target_idxs (torch.tensor): vector of target indexes (shape N,T)
+        """
+        N, T, V = batch_size, n_timesteps, self.vocab_size 
+        input_idxs = torch.zeros([N,T], device=(self.device),dtype=torch.int64)
+        target_idxs = torch.zeros([N,T], device=(self.device),dtype=torch.int64)
+
+        # for every sequence in batch, store the indexes of every word
         for b in range(N):
             input_idxs[b,:] = torch.tensor([self.char_to_ix[ch] for ch in text[
                 pointer + ((b)*T): pointer + ((b+1)*T)
-                ]],device=self.device,dtype=torch.int32)
+                ]],device=self.device,dtype=torch.int64)
             target_idxs[b,:] = torch.tensor([int(self.char_to_ix[ch]) for ch in text[
                 1 + pointer + ((b)*T): 1 + pointer + ((b+1)*T)
-                ]],device=self.device,dtype=torch.int32)
-        inputs = torch.zeros((N, T, V),device=self.device).view(N*T,V)
-        inputs[:,input_idxs.view(N*T)] = 1
-        inputs = inputs.view(N,T,V)
-        # for b, batch in enumerate(inputs):
-        #     for time, timestep in enumerate(batch):
-        #         timestep[int(input_idxs[b,time])] += 1
+                ]],device=self.device,dtype=torch.int64)
+        
+        # one-hot-encode indexes
+        inputs = torch.zeros((N, T, V),device=self.device)
+        inputs.scatter_(2,input_idxs.unsqueeze(dim=2),torch.ones(N,T,V,device=self.device)) 
+
         return inputs, input_idxs, target_idxs
     
     def train(self, n_iter: int, n_timesteps: int, batch_size: int,learning_rate=1e-3,regularization=1e-3,patience = 7) -> None: 
@@ -250,9 +262,9 @@ class Model:
              
             smooth_loss = 0.99 * smooth_loss + 0.01 * loss
             # sample from the model now and then
-            if t % 1500 == 0:
-                txt = self.sample('. ', 300)
-                print("-----\n{}\n-----".format(txt))
+            if t % 30 == 0:
+                txt = self.sample('. ', 500)
+                print("#=========#\n{}\n#=========#".format(txt))
                 test_loss = self.test(n_timesteps, batch_size)
                 print(f'iter {t}, loss: {smooth_loss}, test_loss {test_loss}') 
                 self.logger.info(f'iter {t}, loss: {smooth_loss}, test_loss {test_loss}')
