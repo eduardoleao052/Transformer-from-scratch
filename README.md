@@ -26,7 +26,7 @@ pip install -r requirements.txt
 ```
 python3 run.py --train config.json your_text_file.txt -to_path name_of_json_that_will_store_model.json
 ```
-- run on terminal:
+- Run on terminal:
 ```
 ./run.sh
 ```
@@ -39,7 +39,7 @@ python3 run.py --train config.json your_text_file.txt -to_path name_of_json_that
 ```
 python3 run.py --fine_tune config.json your_text_file.txt -to_path name_of_json_that_will_store_model.json -from_path name_of_pretrained_model_file.json
 ```
-- run on terminal:
+- Run on terminal:
 ```
 ./run.sh
 ```
@@ -50,7 +50,7 @@ python3 run.py --fine_tune config.json your_text_file.txt -to_path name_of_json_
 ```
 python3 run.py --test -sample_size 400 -seed  -from_path name_of_pretrained_model_file.json
 ```
-- run on terminal:
+- Run on terminal:
 ```
 ./run.sh
 ```
