@@ -1,6 +1,6 @@
 ﻿from layers import TemporalDense, LSTM, RNN, TemporalSoftmax, TemporalBatchNorm, DeepMemoryLSTM
 import numpy as np
-from functions import build_logger
+from rnn.utils import build_logger
 import json
 
 class Model:

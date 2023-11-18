@@ -1,6 +1,5 @@
 ﻿import numpy as np
-from optimizers import Adam, SGD_Momentum
-from functions import sigmoid, softmax
+from rnn.utils import *
 
 class Embedding:
     def __init__(self, vocab_size, vec_dim = None, ohe = False):

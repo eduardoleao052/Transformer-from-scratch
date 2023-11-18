@@ -1,7 +1,6 @@
 ﻿import torch, torch.cuda
 import numpy as np
-from optimizers import TorchAdam, SGD_Momentum
-from functions import sigmoid, softmax
+from rnn.utils import *
 
 class Embedding:
     def __init__(self, vocab_size, vec_dim = None, ohe = False):
@@ -469,7 +468,7 @@ class DeepMemoryLSTM:
         c_next += i*g
 
         am = torch.matmul(xt, self.params['Wxm']) + torch.matmul(c_next, self.params['Wcm']) + self.params['bm']
-        am = torch.split(am, 3, dim==1)
+        am = torch.split(am, 3, dim=1)
         im, fm, om = sigmoid(am[0]), sigmoid(am[1]), sigmoid(am[2])
         
         m_next = fm * m_prev
