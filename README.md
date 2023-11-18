@@ -22,9 +22,13 @@ pip install -r requirements.txt
 - Please download your text file in the data directory.
   
 ### Pretraining
-- To pretrain a RNN on language modeling (predicting next character), go into run.sh and set the flag to --train, chose your configuration file (config.json is the default), text corpus file_name (should be inside data directory), and a -to_path (.json file that will store the model - you do not need to create it, just provide a name).
+- To pretrain a RNN on language modeling (predicting next character), go into run.sh and set the flag to --train, and chose the following arguments:
+- To train a CNN on your image dataset, go into run.sh and set the flag to --train and choose the following arguments:
+  - --config (name of configuration file, config.json is the default)
+  - --corpus (name of file in data directory with the text you want to train the model on) 
+  - --to_path (.json file that will store the model - you do not need to create it, just provide a name) [OPTIONAL]
 ```
-python3 run.py --train config.json your_text_file.txt -to_path name_of_json_that_will_store_model.json
+python3 run.py --train --config=config.json --corpus=your_text_file.txt --to_path=name_of_json_that_will_store_model.json
 ```
 - Run on terminal:
 ```
@@ -35,9 +39,13 @@ python3 run.py --train config.json your_text_file.txt -to_path name_of_json_that
 - Note: if you want to alter layers/dimensions, do so in the __init__ of Model at model_torch.py.
   
 ### Fine-tuning
-- To fine-tune your RNN, go into run.sh and set the flag to --fine_tune, chose your configuration file (config.json is the default), new text corpus file_name (should be inside data directory), a -to_path (.json file that will store the model - you do not need to create it, just provide a name) and a -from_path (.json file that contains pretrained model).
+- To fine-tune your RNN, go into run.sh and set the flag to --fine_tune, and chose the following arguments:
+  - --config (name of configuration file, config.json is the default)
+  - --corpus (name of file in data directory with the text you want to train the model on) 
+  - --to_path (.json file that will store the model - you do not need to create it, just provide a name) [OPTIONAL]
+  - --from_path (.json file that contains pretrained model)
 ```
-python3 run.py --fine_tune config.json your_text_file.txt -to_path name_of_json_that_will_store_model.json -from_path name_of_pretrained_model_file.json
+python3 run.py --fine_tune --config=config.json --corpus=your_text_file.txt --to_path=name_of_json_that_will_store_model.json --from_path=name_of_pretrained_model_file.json
 ```
 - Run on terminal:
 ```
@@ -46,15 +54,17 @@ python3 run.py --fine_tune config.json your_text_file.txt -to_path name_of_json_
 - Note: for fine-tuning, a you can get adventurous with smaller text files. I obtained really nice results with ~10K characters, such as a small Shakespeare dataset and Bee Gees' songs.
 
 ### Testing
-- To test your RNN, go into run.sh and set the flag to --test, chose a -sample_size (number of characters to generate), a -seed (The start to the string your model generates, it has to "continue" it), and a -from_path (.json file that contains pretrained model).
+- To test your RNN, go into run.sh and set the flag to --test, and chose the following arguments:
+- --sample_size (.json file that contains pretrained model)
+- --seed (the start to the string your model generates, it has to "continue" it)
+- --from_path (.json file that contains pretrained model)
 ```
-python3 run.py --test -sample_size 400 -seed  -from_path name_of_pretrained_model_file.json
+python3 run.py --test --sample_size=400 --seed="And then Romeo said, as he left the algebraic topology class: "  --from_path=name_of_pretrained_model_file.json
 ```
 - Run on terminal:
 ```
 ./run.sh
 ```
-- Note: for fine-tuning, a you can get adventurous with smaller text files. I obtained really nice results with ~10K characters, such as a small Shakespeare dataset and Bee Gees' songs.
 
 ### Results
 - The Recurrent Neural Network implementation in main.py achieved a loss of 1.22 with a 78 vocabulary size and ~2M tokens of training for 100,000 timesteps (32 batch_size, 200 n_iterations).
