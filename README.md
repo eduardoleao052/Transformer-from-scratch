@@ -25,7 +25,7 @@ pip install -r requirements.txt
 - To pretrain a RNN on language modeling (predicting next character), go into run.sh and set the flag to --train, and chose the following arguments:
 - To train a CNN on your image dataset, go into run.sh and set the flag to --train and choose the following arguments:
   - --corpus (name of file in data directory with the text you want to train the model on) 
-  - --to_path (.json file that will store the model - you do not need to create it, just provide a name) <b>[OPTIONAL]</b>
+  - --to_path (.json file that will be created to store the model) <b>[OPTIONAL]</b>
   - --config (name of configuration file, config.json is the default) <b>[OPTIONAL]</b>
 ```
 python3 run.py --train --corpus=your_text_file.txt --to_path=name_of_json_that_will_store_model.json --config=config.json
@@ -42,7 +42,7 @@ python3 run.py --train --corpus=your_text_file.txt --to_path=name_of_json_that_w
 - To fine-tune your RNN, go into run.sh and set the flag to --fine_tune, and chose the following arguments:
   - --corpus (name of file in data directory with the text you want to train the model on) 
   - --from_path (.json file that contains pretrained model)
-  - --to_path (.json file that will store the model - you do not need to create it, just provide a name) <b>[OPTIONAL]</b>
+  - --to_path (.json file that will be created to store the model) <b>[OPTIONAL]</b>
   - --config (name of configuration file, config.json is the default) <b>[OPTIONAL]</b>
 ```
 python3 run.py --fine_tune --corpus=your_text_file.txt --from_path=name_of_pretrained_model_file.json --to_path=name_of_json_that_will_store_model.json --config=config.json
