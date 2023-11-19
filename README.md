@@ -1,12 +1,26 @@
-# LSTM_From_Scratch
-## Full implementation of the most popular recurrent Natural Language Processing layers in plain code (numpy) and optimized for GPU (cuda/torch)
-
-### Inspiration
+# LSTM From Scratch in Vanilla Python
+- Use this repo to train and test your own RNN and LSTM. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it. Also, feel free to browse the classes in `layers.py`. They contain full and clear implementations of every layer in a RNN.
 - This project started as a way to better understand the underlying principles of NLP. As I implemented these models, I tried to make the code as simple and well-documented as possible. This way, I hoped to make the (at first, very confusing) backpropagation through time a little bit simpler to understand and replicate.
 - Some motivation for this project also came from <i>Artificial intelligence, a Guide for Thinking Humans</i> by Melanie Mirchell.
 - In many layers, I took inspiration from my work on assignments A1-A3 of the CS231n class, and A1-A5 of CS224n.
 
-### Requirements & Setup
+## 1. Project Structure
+
+- `data/` : Folder to store the text file. Currently holds shakespeare.txt (which is the default) and bee_gees.txt.
+
+- `models/` : Folder which stores the saved models. Further explaination in section 2.
+
+- `layers.py` : File containing every layer of the CNN. Each layer is a class with a `.forward` and `.backward` method.
+
+- `model.py` : File with the `Model` class.
+  
+- `run.py` : Script ran by the `./run.sh` command. Trains the model.
+  
+- `run.sh` : Bash script to be executed by the user.
+  
+- `utils.py` : File with helper functions and classes.
+## 2. Running it Yourself
+### Requirements
 - The required packages are listed on recquirements.txt. The numpy-based implementations of the layers are in the layers.py and model.py file, and the torch implementation is on layers_torch.py and model_torch.py.
 - The torch version is a little faster, and is the one used on the run.py implementation. The numpy files are listed for educational purposes only.
 - To setup a miniconda virtual environment, run on terminal:
