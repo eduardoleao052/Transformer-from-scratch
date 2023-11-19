@@ -1,6 +1,6 @@
 ﻿import torch, torch.cuda
 import numpy as np
-from rnn.utils import *
+from utils import *
 
 class Embedding:
     def __init__(self, vocab_size, vec_dim = None, ohe = False):

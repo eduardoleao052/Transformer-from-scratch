@@ -4,6 +4,8 @@ import logging.handlers
 import os
 import torch
 import torch.cuda
+import importlib.util 
+from pathlib import Path
 
 def softmax(z, training = False):
         z -= np.max(z,axis=0,keepdims=True)
@@ -14,6 +16,17 @@ def sigmoid(z, training = False):
         #z= np.max(z,axis=1,keepdims=True)
         a = 1/(1+torch.exp(-z))
         return a
+
+def _build_config_function(config_path: str):
+        cfg_name = config_path.split('/')[-1].split('.')[0]
+        spec = importlib.util.spec_from_file_location(cfg_name, config_path)
+        print(cfg_name)
+        cfg = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cfg)
+        #config = getattr(cfg, "MODEL_CONFIG", None)
+        cfg.build_config
+        return cfg.build_config
+
 
 def clean_vocab(x, word):
     if '\n' in word:

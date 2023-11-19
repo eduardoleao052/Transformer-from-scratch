@@ -3,18 +3,20 @@ from argparse import ArgumentParser
 import json
 import torch, torch.cuda
 import os
+from utils import _build_config_function
 
-def test_model(sample_size,seed,load_path):
-    
-    model = Model(vocab_size, save_path='',device=device)
-    model.load(f'{PATH}/models/{load_path}')
-    print(seed + model.sample(seed,sample_size))
+def test_model(args, vocab_size):
+    config = args.config(vocab_size, device)
+    model = Model(config, vocab_size, save_path='',device=device)
+    model.load(f'{PATH}/models/{args.from_path}')
+    print(args.seed + model.sample(args.seed,args.sample_size))
    
-def train_model(config_path, corpus, save_path):
-    model = Model(vocab_size, f'{PATH}/models/{save_path}', device=device)
-    model.load_text(f'{PATH}/data/{corpus}')
-    config = json.loads(open(f'{PATH}/{config_path}', 'r').read())
+def train_model(args, vocab_size):
+    config = args.config(vocab_size, device)
+    model = Model(config, vocab_size, f'{PATH}/models/{args.to_path}', device=device)
+    model.load_text(f'{PATH}/data/{args.corpus}')
 
+    config = config['hyperparameters']
     losses = model.train(config['n_iter'],
                         config['n_timesteps'],
                         config['batch_size'],
@@ -22,12 +24,13 @@ def train_model(config_path, corpus, save_path):
                         config['regularization'],
                         config['patience'])
 
-def fine_tune(config_path,corpus,save_path,load_path):
-    model = Model(vocab_size, f'{PATH}/models/{save_path}', device=device)
+def fine_tune(args, vocab_size):
+    config = args.config(vocab_size, device)
+    model = Model(config, vocab_size, f'{PATH}/models/{args.to_path}', device=device)
 
-    model.load(f'{PATH}/models/{load_path}')
-    model.load_text(f'{PATH}/data/{corpus}')
-    config = json.loads(open(f'{PATH}/{config_path}', 'r').read())
+    model.load(f'{PATH}/models/{args.from_path}')
+    model.load_text(f'{PATH}/data/{args.corpus}')
+    config = config['hyperparameters']
 
     losses = model.train(config['n_iter'],
                         config['n_timesteps'],
@@ -45,7 +48,7 @@ def parse_arguments():
     parser.add_argument('--test', action='store_true',
                         help='test the model with provided text sample_size (default = 300) and seed')
 
-    parser.add_argument('--config', nargs='?', type=str, default=f"{PATH}/config.json",
+    parser.add_argument('--config', nargs='?', type=_build_config_function, default=f"{PATH}/config.py",
                         help='path to configuration file for fine tuning/training the model')
     parser.add_argument('--corpus', nargs='?', type=str, default=f"{PATH}/data/sanderson.txt",
                         help='path to text corpus used to fine tune/train model')
@@ -78,19 +81,16 @@ else:
     print ("CUDA device not found, using CPU")
 args = parse_arguments()
 
-
 if args.train:
     vocab_size = len(set((open(f'{PATH}/data/{args.corpus}','r',encoding='utf8')).read()))
-    train_model(args.config, args.corpus, args.to_path)
+    train_model(args, vocab_size)
 if args.fine_tune:
     vocab_size_to = len(set((open(f'{PATH}/data/{args.corpus}','r',encoding='utf8')).read()))
     vocab_size_from = len(json.loads(open(f'{PATH}/models/{args.from_path}','r').read()).pop())
     vocab_size = max(vocab_size_to,vocab_size_from)
-    print(vocab_size)
-    print(args.corpus)
-    fine_tune(args.config, args.corpus, args.to_path, args.from_path)
+    fine_tune(args, vocab_size)
     
 if args.test:
     vocab_size = len(json.loads(open(f'{PATH}/models/{args.from_path}','r').read()).pop())
-    test_model(args.sample_size, args.seed, args.from_path)
+    test_model(args, vocab_size)
 

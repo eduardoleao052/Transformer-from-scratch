@@ -1,14 +1,15 @@
 ﻿from layers_torch import TemporalDense, LSTM, RNN, TemporalSoftmax, TemporalBatchNorm, DeepMemoryLSTM
 import torch, torch.cuda
 import numpy as np
-from rnn.utils import build_logger
+from utils import build_logger
 import json
 
 class Model:
-    def __init__(self, vocab_size: int, save_path: str, device: str) -> None:
+    def __init__(self, config: dict, vocab_size: int, save_path: str, device: str) -> None:
         """
         Initializes model. Has all layers setup with internal sizes.
 
+        @param config (dict): dictionary with hyperparameters and layers of the model.
         @param vocab_size (int): size of vocabulary (num of different words or characters),
         will be used as input and output sizes.
         @param save_path (str): path to .json file that will store model params
@@ -20,13 +21,7 @@ class Model:
         self.preloaded = False
         self.logger = build_logger('output.logger@gmail.com','bcof jupb ugbh vfll')
         self.vocab_size = vocab_size 
-        fcc1 = TemporalDense(vocab_size, 500, device = device)
-        rnn1 = RNN(500, 500, device = device)
-        fcc2 = TemporalDense(500, 500, device = device)  
-        rnn2 = RNN(500, 500, device = device)
-        fcc3 = TemporalDense(500, vocab_size, device = device)  
-        soft = TemporalSoftmax(device = device)
-        self.layers = [fcc1,rnn1,fcc2,rnn2,fcc3,soft]
+        self.layers = config['model_layers']
         
     def load_text(self, file: str, val_size = 0.05) -> None:
         """
