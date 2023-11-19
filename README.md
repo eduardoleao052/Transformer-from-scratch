@@ -10,9 +10,11 @@
 
 - `models/` : Folder which stores the saved models. Further explaination in section 2.
 
-- `layers.py` : File containing every layer of the CNN. Each layer is a class with a `.forward` and `.backward` method.
+- `config.py` : File with all model configuration. Edit this file to alter model layers and hyperparameters.
 
-- `model.py` : File with the `Model` class.
+- `torch_layers.py` : File containing every layer of the LSTM. Each layer is a class with a `.forward` and `.backward` method.
+
+- `torch_model.py` : File with the `Model` class.
   
 - `run.py` : Script ran by the `./run.sh` command. Trains the model.
   
@@ -21,7 +23,7 @@
 - `utils.py` : File with helper functions and classes.
 ## 2. Running it Yourself
 ### Requirements
-- The required packages are listed on recquirements.txt. The numpy-based implementations of the layers are in the layers.py and model.py file, and the torch implementation is on layers_torch.py and model_torch.py.
+- The required packages are listed on recquirements.txt. The numpy-based implementations of the layers are in the `numpy_implementations` folder in `layers.py` and `model.py`, and the torch implementation is on layers_torch.py and model_torch.py.
 - The torch version is a little faster, and is the one used on the run.py implementation. The numpy files are listed for educational purposes only.
 - To setup a miniconda virtual environment, run on terminal:
 ```
@@ -36,17 +38,21 @@ pip install -r requirements.txt
 - Please download your text file in the data directory.
   
 ### Pretraining
-- To pretrain a RNN on language modeling (predicting next character), go into run.sh and set the flag to --train, and chose the following arguments:
-- To train a CNN on your image dataset, go into run.sh and set the flag to --train and choose the following arguments:
+- To pretrain a RNN on language modeling (predicting next character), first go into config.py and chose the necessary arguments.
+- Under `hyperparameters`, you may want to alter (although the defaults work pretty well):
+  - `n_iter` (number of times the model will run a full sequence during training)
+  - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
+  - `batch_size` (number of parallel iterations the model will run)
+  - `learning_rate` (scalar regulating how quickly model parameters change. Should be smaller for fine-tuning)
+  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
+  - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
+- Under `model_layers`, you can choose whatever configuration works best. Usually, layers with more parameters work better for larger text files.
+- Under `training_parameters`, choose:
   - --corpus (name of file in data directory with the text you want to train the model on) 
   - --to_path (.json file that will be created to store the model) <b>[OPTIONAL]</b>
-  - --config (name of configuration file, config.py is the default) <b>[OPTIONAL]</b>
+- Finally, simply run on terminal:
 ```
-python3 run.py --train --corpus=your_text_file.txt --to_path=name_of_json_that_will_store_model.json --config=config.json
-```
-- Run on terminal:
-```
-./run.sh
+python3 run.py --train --config=config.py
 ```
 - Whenever you feel like the samples are good enough, you can kill the training at any time. This will NOT corrupt the model saved .json file, and you may proceed to testing and fine_tuning on smaller datasets.
 - Note: for pretraining, a really large text corpus is usually necessary. I obtained good results with ~1M characters.
