@@ -44,10 +44,13 @@ pip install -r requirements.txt
   - `learning_rate` (scalar regulating how quickly model parameters change. Should be smaller for fine-tuning)
   - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
   - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
+  
 - Under `model_layers`, you can choose whatever configuration works best. Usually, layers with more parameters work better for larger text files.
+  
 - Under `training_parameters`, choose:
   - --corpus (name of file in data directory with the text you want to train the model on) 
   - --to_path (.json file that will be created to store the model) <b>[OPTIONAL]</b>
+  
 - Finally, simply run on terminal:
 ```
 python3 run.py --train --config=config.py
