@@ -26,7 +26,7 @@ pip install -r requirements.txt
 - To train a CNN on your image dataset, go into run.sh and set the flag to --train and choose the following arguments:
   - --corpus (name of file in data directory with the text you want to train the model on) 
   - --to_path (.json file that will be created to store the model) <b>[OPTIONAL]</b>
-  - --config (name of configuration file, config.json is the default) <b>[OPTIONAL]</b>
+  - --config (name of configuration file, config.py is the default) <b>[OPTIONAL]</b>
 ```
 python3 run.py --train --corpus=your_text_file.txt --to_path=name_of_json_that_will_store_model.json --config=config.json
 ```
@@ -36,14 +36,14 @@ python3 run.py --train --corpus=your_text_file.txt --to_path=name_of_json_that_w
 ```
 - Whenever you feel like the samples are good enough, you can kill the training at any time. This will NOT corrupt the model saved .json file, and you may proceed to testing and fine_tuning on smaller datasets.
 - Note: for pretraining, a really large text corpus is usually necessary. I obtained good results with ~1M characters.
-- Note: if you want to alter layers/dimensions, do so in the __init__ of Model at model_torch.py.
+- Note: if you want to alter layers/dimensions, do so in the __config.py__ file.
   
 ### Fine-tuning
 - To fine-tune your RNN, go into run.sh and set the flag to --fine_tune, and chose the following arguments:
   - --corpus (name of file in data directory with the text you want to train the model on) 
   - --from_path (.json file that contains pretrained model)
   - --to_path (.json file that will be created to store the model) <b>[OPTIONAL]</b>
-  - --config (name of configuration file, config.json is the default) <b>[OPTIONAL]</b>
+  - --config (name of configuration file, config.py is the default) <b>[OPTIONAL]</b>
 ```
 python3 run.py --fine_tune --corpus=your_text_file.txt --from_path=name_of_pretrained_model_file.json --to_path=name_of_json_that_will_store_model.json --config=config.json
 ```
