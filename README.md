@@ -48,8 +48,8 @@ pip install -r requirements.txt
 - Under `model_layers`, you can choose whatever configuration works best. Usually, layers with more parameters work better for larger text files.
   
 - Under `training_parameters`, choose:
-  - --corpus (name of file in data directory with the text you want to train the model on) 
-  - --to_path (.json file that will be created to store the model) <b>[OPTIONAL]</b>
+  - `--corpus` (name of file in data directory with the text you want to train the model on) 
+  - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
   
 - Finally, simply run on terminal:
 ```
