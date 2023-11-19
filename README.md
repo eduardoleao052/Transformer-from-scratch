@@ -72,9 +72,9 @@ python3 run.py --train --config=config.py
 - `model_layers` will not be accessed during fine-tuning, as you will use the layers of the pretrained model.
   
 - Under `training_parameters`, choose:
-  - --corpus (name of file in data directory with the text you want to train the model on) 
-  - --from_path (.json file that contains pretrained model)
-  - --to_path (.json file that will be created to store the model) <b>[OPTIONAL]</b>
+  - `--corpus` (name of file in data directory with the text you want to train the model on) 
+  - `--from_path` (.json file that contains pretrained model)
+  - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
   
 - Finally, simply run on terminal:
 ```
