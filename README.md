@@ -17,9 +17,7 @@
 - `torch_model.py` : File with the `Model` class.
   
 - `run.py` : Script ran by the `./run.sh` command. Trains the model.
-  
-- `run.sh` : Bash script to be executed by the user.
-  
+    
 - `utils.py` : File with helper functions and classes.
 ## 2. Running it Yourself
 ### Requirements
