@@ -36,7 +36,7 @@ pip install -r requirements.txt
 - Please download your text file in the data directory.
   
 ### Pretraining
-- To pretrain a RNN on language modeling (predicting next character), <b>first go into `config.py`</b> and chose the necessary arguments.
+- To pretrain a RNN on language modeling (predicting next character), first go into `config.py` and chose the necessary arguments.
 - Under `hyperparameters`, you may want to alter (although the defaults work pretty well):
   - `n_iter` (number of times the model will run a full sequence during training)
   - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
@@ -60,22 +60,42 @@ python3 run.py --train --config=config.py
 - Note: if you want to alter layers/dimensions, do so in the __config.py__ file.
   
 ### Fine-tuning
-- To fine-tune your RNN, go into run.sh and set the flag to --fine_tune, and chose the following arguments:
+- To fine-tune a RNN on a given text file, go to `config.py` and choose the arguments:
+- Under `hyperparameters`, you may want to alter (although the defaults work well for pretraining):
+  - `n_iter` (number of times the model will run a full sequence during training)
+  - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
+  - `batch_size` (number of parallel iterations the model will run)
+  - `learning_rate` (scalar regulating how quickly model parameters change. <b>Should be smaller for fine-tuning</b>)
+  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
+  - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
+  
+- `model_layers` will not be accessed during fine-tuning, as you will use the layers of the pretrained model.
+  
+- Under `training_parameters`, choose:
   - --corpus (name of file in data directory with the text you want to train the model on) 
   - --from_path (.json file that contains pretrained model)
   - --to_path (.json file that will be created to store the model) <b>[OPTIONAL]</b>
-  - --config (name of configuration file, config.py is the default) <b>[OPTIONAL]</b>
+  
+- Finally, simply run on terminal:
 ```
-python3 run.py --fine_tune --corpus=your_text_file.txt --from_path=name_of_pretrained_model_file.json --to_path=name_of_json_that_will_store_model.json --config=config.json
+python3 run.py --fine_tune --config=config.py
 ```
-- Run on terminal:
-```
-./run.sh
-```
+
 - Note: for fine-tuning, a you can get adventurous with smaller text files. I obtained really nice results with ~10K characters, such as a small Shakespeare dataset and Bee Gees' songs.
 
 ### Testing
-- To test your RNN, go into run.sh and set the flag to --test, and chose the following arguments:
+- To test your RNN, go to `config.py` and choose the arguments:
+- Under `hyperparameters`, you may want to alter (although the defaults work well for pretraining):
+  - `n_iter` (number of times the model will run a full sequence during training)
+  - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
+  - `batch_size` (number of parallel iterations the model will run)
+  - `learning_rate` (scalar regulating how quickly model parameters change. <b>Should be smaller for fine-tuning</b>)
+  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
+  - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
+  
+- `model_layers` will not be accessed during fine-tuning, as you will use the layers of the pretrained model.
+  
+- Under `training_parameters`, choose:
 - --from_path (.json file that contains pretrained model) 
 - --sample_size (.json file that contains pretrained model) <b>[OPTIONAL]</b>
 - --seed (the start to the string your model generates, it has to "continue" it) <b>[OPTIONAL]</b>
