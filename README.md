@@ -90,9 +90,9 @@ python3 run.py --fine_tune --config=config.py
 - `model_layers` will not be accessed during fine-tuning, as you will use the layers of the pretrained model.
   
 - Under `training_parameters`, choose:
-- `--from_path` (.json file that contains pretrained model) 
-- `--sample_size` (how many characters will be generated, "sounding" like the source text) <b>[OPTIONAL]</b>
-- `--seed` (the start to the string your model generates, it has to "continue" it) <b>[OPTIONAL]</b>
+  - `--from_path` (.json file that contains pretrained model) 
+  - `--sample_size` (how many characters will be generated, "sounding" like the source text) <b>[OPTIONAL]</b>
+  - `--seed` (the start to the string your model generates, it has to "continue" it) <b>[OPTIONAL]</b>
 
 - Finally, simply run on terminal:
 ```
