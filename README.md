@@ -36,7 +36,7 @@ pip install -r requirements.txt
 - Please download your text file in the data directory.
   
 ### Pretraining
-- To pretrain a RNN on language modeling (predicting next character), first go into config.py and chose the necessary arguments.
+- To pretrain a RNN on language modeling (predicting next character), <b>first go into `config.py`</b> and chose the necessary arguments.
 - Under `hyperparameters`, you may want to alter (although the defaults work pretty well):
   - `n_iter` (number of times the model will run a full sequence during training)
   - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
