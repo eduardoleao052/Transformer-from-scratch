@@ -85,32 +85,23 @@ python3 run.py --fine_tune --config=config.py
 
 ### Testing
 - To test your RNN, go to `config.py` and choose the arguments:
-- Under `hyperparameters`, you may want to alter (although the defaults work well for pretraining):
-  - `n_iter` (number of times the model will run a full sequence during training)
-  - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
-  - `batch_size` (number of parallel iterations the model will run)
-  - `learning_rate` (scalar regulating how quickly model parameters change. <b>Should be smaller for fine-tuning</b>)
-  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
-  - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
+- `hyperparameters` will not be accessed during training, because the model is already trained.
   
 - `model_layers` will not be accessed during fine-tuning, as you will use the layers of the pretrained model.
   
 - Under `training_parameters`, choose:
-- --from_path (.json file that contains pretrained model) 
-- --sample_size (.json file that contains pretrained model) <b>[OPTIONAL]</b>
-- --seed (the start to the string your model generates, it has to "continue" it) <b>[OPTIONAL]</b>
+- `--from_path` (.json file that contains pretrained model) 
+- `--sample_size` (how many characters will be generated, "sounding" like the source text) <b>[OPTIONAL]</b>
+- `--seed` (the start to the string your model generates, it has to "continue" it) <b>[OPTIONAL]</b>
 
+- Finally, simply run on terminal:
 ```
-python3 run.py --test --from_path=name_of_pretrained_model_file.json --sample_size=400 --seed="And then Romeo said, as he left the algebraic topology class: " 
-```
-- Run on terminal:
-```
-./run.sh
+python3 run.py --config=config.py" 
 ```
 
 ### Results
-- The Recurrent Neural Network implementation in main.py achieved a loss of 1.22 with a 78 vocabulary size and ~2M tokens of training for 100,000 timesteps (32 batch_size, 200 n_iterations).
-- The LSTM achieved a loss of 1.11 with the same settings.
+- The Recurrent Neural Network implementation in main.py achieved a loss of <b>1.22</b> with a 78 vocabulary size and ~2M tokens of training for 100,000 timesteps (32 batch_size, 200 n_iterations).
+- The LSTM achieved a loss of <b>1.11</b> with the same settings.
 - Training times seemed to be a little faster with GPU, but the improvement was not dramatic (maybe due to iterative and non-paralellizeable nature of RNNs).
 - Total training times: RNN ~4h, LSTM ~10h on one GTX1070 Nvidia GPU.
 - Result with ~4h of pretraining on reduced version of COCA (around 10M tokens) and ~1h of fine-tuning on <i>tiny_shakespeare</i> dataset:
