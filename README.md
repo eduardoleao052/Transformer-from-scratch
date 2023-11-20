@@ -37,7 +37,10 @@ pip install -r requirements.txt
   
 ### Pretraining
 - To pretrain a RNN on language modeling (predicting next character), first go into `config.py` and chose the necessary arguments.
-- Under `hyperparameters`, you may want to alter (although the defaults work pretty well):
+- Under `training_parameters`, choose:
+  - `--corpus` (name of file in data directory with the text you want to train the model on) 
+  - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
+- And you can choose the hyperparameters (although the defaults work pretty well):
   - `n_iter` (number of times the model will run a full sequence during training)
   - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
   - `batch_size` (number of parallel iterations the model will run)
@@ -45,11 +48,7 @@ pip install -r requirements.txt
   - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
   - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
   
-- Under `model_layers`, you can choose whatever configuration works best. Usually, layers with more parameters work better for larger text files.
-  
-- Under `training_parameters`, choose:
-  - `--corpus` (name of file in data directory with the text you want to train the model on) 
-  - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
+- Under `model_layers`, you can choose whatever configuration works best. Usually, layers with more parameters require larger text files to avoid overfitting and repetitive outputs.
   
 - Finally, simply run on terminal:
 ```
@@ -61,20 +60,19 @@ python3 run.py --train --config=config.py
   
 ### Fine-tuning
 - To fine-tune a RNN on a given text file, go to `config.py` and choose the arguments:
-- Under `hyperparameters`, you may want to alter (although the defaults work well for pretraining):
-  - `n_iter` (number of times the model will run a full sequence during training)
-  - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
-  - `batch_size` (number of parallel iterations the model will run)
-  - `learning_rate` (scalar regulating how quickly model parameters change. <b>Should be smaller for fine-tuning</b>)
-  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
-  - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
-  
-- `model_layers` will not be accessed during fine-tuning, as you will use the layers of the pretrained model.
-  
 - Under `training_parameters`, choose:
   - `--corpus` (name of file in data directory with the text you want to train the model on) 
   - `--from_path` (.json file that contains pretrained model)
   - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
+- And you can choose the hyperparameters (although the defaults work pretty well):
+  - `n_iter` (number of times the model will run a full sequence during training)
+  - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
+  - `batch_size` (number of parallel iterations the model will run)
+  - `learning_rate` (scalar regulating how quickly model parameters change)
+  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
+  - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
+  
+- `model_layers` will not be accessed during fine-tuning, as the layers of the pretrained model will be automatically loaded.
   
 - Finally, simply run on terminal:
 ```
@@ -85,14 +83,14 @@ python3 run.py --fine_tune --config=config.py
 
 ### Testing
 - To test your RNN, go to `config.py` and choose the arguments:
-- `hyperparameters` will not be accessed during training, because the model is already trained.
-  
-- `model_layers` will not be accessed during fine-tuning, as you will use the layers of the pretrained model.
-  
 - Under `training_parameters`, choose:
   - `--from_path` (.json file that contains pretrained model) 
   - `--sample_size` (how many characters will be generated, "sounding" like the source text) <b>[OPTIONAL]</b>
   - `--seed` (the start to the string your model generates, it has to "continue" it) <b>[OPTIONAL]</b>
+  
+- Note: the testing script does not access any hyperparametes, because the model is already trained.
+  
+- `model_layers` will not be accessed during fine-tuning, as you will use the layers of the pretrained model.
 
 - Finally, simply run on terminal:
 ```
