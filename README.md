@@ -23,9 +23,10 @@
 ### Requirements
 - The required packages are listed on recquirements.txt. The numpy-based implementations of the layers are in the `numpy_implementations` folder in `layers.py` and `model.py`, and the torch implementation is on layers_torch.py and model_torch.py.
 - The torch version is a little faster, and is the one used on the run.py implementation. The numpy files are listed for educational purposes only.
-- To setup a miniconda virtual environment, run on terminal:
+- To setup and join a miniconda virtual environment, run on terminal:
 ```
 conda create -n environment_name python=3.8
+conda activate environment_name
 ```
 - The requirements can be installed on a virtual environment with the command
 ```
