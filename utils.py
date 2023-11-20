@@ -5,7 +5,7 @@ import os
 import torch
 import torch.cuda
 import importlib.util 
-from pathlib import Path
+import json
 
 def softmax(z, training = False):
         z -= np.max(z,axis=0,keepdims=True)
@@ -18,15 +18,46 @@ def sigmoid(z, training = False):
         return a
 
 def _build_config_function(config_path: str):
+        """"
+        Extracts build_config function from config.py or other given configuration file using the path (str).
+
+        @param config_path (str): path to configuration file
+
+        @returns vocab_size (function): size of vocabulary (num of different words or characters),
+        will be used as input and output sizes.
+        """
+        #get the name of the config file (default = `config.py`)
         cfg_name = config_path.split('/')[-1].split('.')[0]
+        #extract cfg (config file):
         spec = importlib.util.spec_from_file_location(cfg_name, config_path)
-        print(cfg_name)
         cfg = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cfg)
-        #config = getattr(cfg, "MODEL_CONFIG", None)
+        #return (config_file.build_config), which is the funtion
         cfg.build_config
         return cfg.build_config
 
+def _get_vocab_size(args, training_corpus_path, fine_tune_from_path, test_from_path) -> int:
+        """"
+        Gets vocabulary size of the model that will be built.
+
+        @param args (dict): arguments from terminal (wether to train, test, or fine-tune)
+        @param training_corpus_path (str): path to training corpus
+        @param fine_tune_from_path (str): path to file where the model to be fine-tuned is
+        @param test_from_path (str): path to file where the model to be tested is
+
+        @returns vocab_size (dict): size of vocabulary (num of different words or characters),
+        will be used as input and output sizes.
+        """
+        if args.train:
+                vocab_size = len(set((open(training_corpus_path,'r',encoding='utf8')).read()))
+
+        if args.fine_tune:
+                vocab_size = len(json.loads(open(fine_tune_from_path,'r').read()).pop())
+        
+        if args.test:
+                vocab_size = len(json.loads(open(test_from_path,'r').read()).pop())
+        
+        return vocab_size
 
 def clean_vocab(x, word):
     if '\n' in word:

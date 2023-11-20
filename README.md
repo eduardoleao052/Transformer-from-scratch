@@ -96,7 +96,7 @@ python3 run.py --fine_tune --config=config.py
 
 - Finally, simply run on terminal:
 ```
-python3 run.py --config=config.py" 
+python3 run.py --test --config=config.py" 
 ```
 
 ### Results

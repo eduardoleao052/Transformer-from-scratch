@@ -61,7 +61,9 @@ class Embedding:
 
 class TemporalSoftmax:
     def __init__(self, device = 'cpu'):
-        self.params = {}
+        self.params = {
+            'type':torch.tensor([4])
+        }
 
     def initialize_optimizer(self, lr, reg):
         self.config = {
@@ -116,13 +118,13 @@ class TemporalDense:
         self.device = device
         self.params = {
             'W': torch.randn(in_size, out_size) / np.sqrt(in_size),
-            'b': torch.zeros(out_size)
+            'b': torch.zeros(out_size),
+            'type': torch.tensor([1])
         }
 
-        self.params = {key: param.to(device) for key, param in self.params.items()}
+        self.params = {key: param.to(device) for key, param in self.params.items()} 
         self.in_size = in_size
-        self.out_size = out_size
-    
+
     def initialize_optimizer(self, lr, reg):
         self.config = {
                        'learning_rate': lr,
@@ -195,12 +197,12 @@ class RNN:
             'Wxh': torch.randn(in_size, hidden_size) / np.sqrt(in_size),
             'Whh': torch.randn(hidden_size, hidden_size) / np.sqrt(hidden_size),
             'bh': torch.zeros(hidden_size),
+            'type': torch.tensor([2])
         }
 
-        self.params = {key: param.to(device) for key, param in self.params.items()}
+        self.params = {key: param.to(device) for key, param in self.params.items()} 
         self.in_size = in_size
-        self.hidden_size = hidden_size
-    
+
     def initialize_optimizer(self, lr, reg):
         self.config = {
                        'learning_rate': lr,
@@ -218,7 +220,7 @@ class RNN:
         }
 
     def forward(self, x):
-        (N, T, I), H = x.shape, self.hidden_size
+        (N, T, I), H = x.shape, self.params['bh'].shape[0]
         self.cache = []
         h = [torch.zeros([N,H], device=self.device)]
         #h = [torch.zeros([N,H])]
@@ -242,7 +244,7 @@ class RNN:
         (N, T, H), (N,D) = dz.shape, self.cache[0][2].shape
 
         # initialize gradients as zero
-        dh_next = torch.zeros([N, self.hidden_size],device=self.device)
+        dh_next = torch.zeros([N, H],device=self.device)
         self.grads = {
                     'dx': torch.zeros((N,T,D), device=self.device), # create dx with shape == x.shape
                     'dbh': torch.zeros_like(self.params['bh'], device=self.device),
@@ -290,13 +292,13 @@ class LSTM:
         self.params = {
             'Wha': torch.randn(hidden_size, hidden_size * 4) / np.sqrt(hidden_size),
             'Wxa': torch.randn(in_size, hidden_size * 4) / np.sqrt(in_size),
-            'ba': torch.zeros(hidden_size * 4)
+            'ba': torch.zeros(hidden_size * 4),
+            'type': torch.tensor([3])
         }
 
         self.params = {key: param.to(device) for key, param in self.params.items()}
         self.in_size = in_size
-        self.hidden_size = hidden_size
-    
+
     def initialize_optimizer(self, lr, reg):
         self.config = {
                        'learning_rate': lr,
@@ -314,7 +316,7 @@ class LSTM:
         }
 
     def forward(self, x):
-        (N, T, I), H = x.shape, self.hidden_size
+        (N, T, I), H = x.shape, self.params['ba'].shape[0]
         self.cache = []
         h = [torch.zeros([N,H],device=self.device)]
         next_c = torch.zeros([N,H],device=self.device)
@@ -331,8 +333,10 @@ class LSTM:
         return h 
 
     def forward_step(self, xt, h_prev, c_prev):
+        H = self.params['bh'].shape[0]
+
         a = torch.matmul(xt, self.params['Wxa']) + torch.matmul(h_prev, self.params['Wha']) + self.params['ba']
-        a = torch.split(a, self.hidden_size, dim=1)
+        a = torch.split(a, H, dim=1)
 
         i, f, o, g = sigmoid(a[0]), sigmoid(a[1]), sigmoid(a[2]), torch.tanh(a[3])
         c_next = f * c_prev
@@ -346,8 +350,8 @@ class LSTM:
         (N, T, H), (N,D) = dz.shape, self.cache[0][-1].shape
 
         # initialize gradients as zero
-        dh_next = torch.zeros([N,self.hidden_size],device=self.device)
-        dc_next = torch.zeros([N,self.hidden_size],device=self.device)
+        dh_next = torch.zeros([N,H],device=self.device)
+        dc_next = torch.zeros([N,H],device=self.device)
         self.grads = {
                     'dx': torch.zeros((N,T,D), device=self.device), # create dx with shape == x.shape
                     'dba': torch.zeros_like(self.params['ba'], device=self.device),
@@ -665,159 +669,3 @@ class TemporalBatchNorm:
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
 
 
-class PositionalEncoder:
-    def __init__(self, in_size, out_size, device = 'cpu'):
-        self.params = {
-            'W': torch.randn(in_size, out_size) / np.sqrt(in_size),
-            'b': torch.zeros(out_size)
-        }
-
-        self.in_size = in_size
-        self.out_size = out_size
-    
-    def initialize_optimizer(self, lr, reg):
-        self.config = {
-                       'learning_rate': lr,
-                       'regularization': reg,
-                       'beta1': .9,
-                       'beta2':.99,
-                       'epsilon':1e-8,
-                       'm_b':torch.zeros(self.params['b'].shape),
-                       'v_b':torch.zeros(self.params['b'].shape),
-                       'm_W':torch.zeros(self.params['W'].shape),
-                       'v_W':torch.zeros(self.params['W'].shape),
-                       't':30,
-        }
-
-    def forward(self, x):
-        self.cache = []
-        z = []
-
-        for t in range(x.shape[1]):
-            # Run forward pass, retrieve next h and append new cache
-            zt, cache_t = self.forward_step(x[:, t])
-            z.append(zt)
-            self.cache.append(cache_t)
-        
-        # Stack over T, excluding h0
-        z = torch.stack(z, axis=1)
-        return z
-
-    def forward_step(self, xt):
-        zt = xt.matmul(self.params['W']) + self.params['b']
-        cache_t = (xt, zt)
-        return zt, cache_t
-
-    def backward(self, dz):
-        (N, T, O), (N, I) = dz.shape, self.cache[-1][0].shape
-
-        # initialize gradients as zero
-        self.grads = {
-                    'dx': torch.zeros([N, T, I]),
-                    'db': torch.zeros_like(self.params['b']),
-                    'dW': torch.zeros_like(self.params['W']),
-                    }
-        
-        for t in range(T-1, -1, -1):
-            # Run backward pass for t^th timestep and update the gradient matrices
-            dx_t, dW_t, db_t = self.backward_step(dz[:, t], self.cache[t])
-            self.grads['dx'][:, t] = dx_t
-            self.grads['dW'] += dW_t
-            self.grads['db'] += db_t
-
-        return self.grads['dx']
-
-    def backward_step(self, dzt, cache):
-        xt, zt = cache
-
-        dx = dzt.matmul(self.params['W'].T)
-        dw = dzt.T.matmul(xt).T
-        db = dzt.sum(axis=0)
-
-        return dx, dw, db
-
-    def optimize(self):
-        self.params, self.config = TorchAdam(self.params, self.grads, self.config)
-
-
-class MultiHeadAttention:
-    def __init__(self, in_size, out_size, device = 'cpu'):
-        self.params = {
-            'W': torch.randn(in_size, out_size) / np.sqrt(in_size),
-            'b': torch.zeros(out_size)
-        }
-
-        self.in_size = in_size
-        self.out_size = out_size
-    
-    def initialize_optimizer(self, lr, reg):
-        self.config = {
-                       'learning_rate': lr,
-                       'regularization': reg,
-                       'beta1': .9,
-                       'beta2':.99,
-                       'epsilon':1e-8,
-                       'm_b':torch.zeros(self.params['b'].shape),
-                       'v_b':torch.zeros(self.params['b'].shape),
-                       'm_W':torch.zeros(self.params['W'].shape),
-                       'v_W':torch.zeros(self.params['W'].shape),
-                       't':30,
-        }
-
-    def forward(self, x):
-        self.cache = []
-        z = []
-
-        for t in range(x.shape[1]):
-            # Run forward pass, retrieve next h and append new cache
-            zt, cache_t = self.forward_step(x[:, t])
-            z.append(zt)
-            self.cache.append(cache_t)
-        
-        # Stack over T, excluding h0
-        z = torch.stack(z, axis=1)
-        return z
-
-    def forward_step(self, xt):
-        zt = xt.matmul(self.params['W']) + self.params['b']
-        cache_t = (xt, zt)
-        return zt, cache_t
-
-    def backward(self, dz):
-        (N, T, O), (N, I) = dz.shape, self.cache[-1][0].shape
-
-        # initialize gradients as zero
-        self.grads = {
-                    'dx': torch.zeros([N, T, I]),
-                    'db': torch.zeros_like(self.params['b']),
-                    'dW': torch.zeros_like(self.params['W']),
-                    }
-        
-        for t in range(T-1, -1, -1):
-            # Run backward pass for t^th timestep and update the gradient matrices
-            dx_t, dW_t, db_t = self.backward_step(dz[:, t], self.cache[t])
-            self.grads['dx'][:, t] = dx_t
-            self.grads['dW'] += dW_t
-            self.grads['db'] += db_t
-
-        return self.grads['dx']
-
-    def backward_step(self, dzt, cache):
-        xt, zt = cache
-
-        dx = dzt.matmul(self.params['W'].T)
-        dw = dzt.T.matmul(xt).T
-        db = dzt.sum(axis=0)
-
-        return dx, dw, db
-
-    def optimize(self):
-        self.params, self.config = TorchAdam(self.params, self.grads, self.config)
-
-
-class TransformerEncoder:
-    pass
-
-
-class TransformerDecoder:
-    pass

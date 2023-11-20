@@ -5,13 +5,11 @@ from utils import build_logger
 import json
 
 class Model:
-    def __init__(self, config: dict, vocab_size: int, save_path: str, device: str) -> None:
+    def __init__(self, config: dict, save_path: str, device: str) -> None:
         """
         Initializes model. Has all layers setup with internal sizes.
 
         @param config (dict): dictionary with hyperparameters and layers of the model.
-        @param vocab_size (int): size of vocabulary (num of different words or characters),
-        will be used as input and output sizes.
         @param save_path (str): path to .json file that will store model params
         @param device (str): device to store tensors.
 
@@ -20,8 +18,9 @@ class Model:
         self.device = device
         self.preloaded = False
         self.logger = build_logger('output.logger@gmail.com','bcof jupb ugbh vfll')
-        self.vocab_size = vocab_size 
         self.layers = config['model_layers']
+        self.vocab_size = self.layers[0].in_size 
+
         
     def load_text(self, file: str, val_size = 0.05) -> None:
         """
@@ -79,15 +78,31 @@ class Model:
         """
 
         self.preloaded = True
+        self.layers = []
         file = open(path, 'r')
         param_list = file.read()
         param_list = json.loads(param_list)
         self.char_to_ix = param_list.pop()
         self.ix_to_char = {i:ch for ch, i in self.char_to_ix.items()}
+        for i, param_dict in enumerate(param_list):
+            if param_dict['type'] == [4]:
+                layer = TemporalSoftmax(device=self.device)
+                self.layers.append(layer)
+            elif param_dict['type'] == [1]:
+                layer = TemporalDense(0, 0, device=self.device)
+                layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
+                self.layers.append(layer)
+            elif param_dict['type'] == [2]:
+                layer = RNN(0, 0, device=self.device)
+                layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
+                self.layers.append(layer)
+            elif param_dict['type'] == [3]:
+                layer = LSTM(0, 0, device=self.device)
+                layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
+                self.layers.append(layer)
+        #get vocab size from the first dense layer in the loaded model
+        self.vocab_size = self.layers[0].params['W'].shape[0]
 
-        for i, layer in enumerate(self.layers):
-            layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
-            
     def sample(self, seed:str, n_timesteps:int) -> list:
         """
         Generate indexes to test model's generative properties
@@ -99,11 +114,11 @@ class Model:
         @returns idxs (list): list with all indexes generated
         """
 
-        # create list with indexes of seed:
-        idx = [self.char_to_ix[ch] for ch in seed]
+        # create list with indexes of seed, starting with 0:
+        idx = [0]+[self.char_to_ix[ch] for ch in seed]
         
         # create input as one-hot-encoded vector of indexes:
-        inputs = torch.zeros((1, len(seed), self.vocab_size),device=(self.device))
+        inputs = torch.zeros((1, len(seed)+1, self.vocab_size),device=(self.device))
         for t, timestep in enumerate(inputs[0]):
             timestep[idx[t]] += 1
 
@@ -194,7 +209,6 @@ class Model:
         N, T, V = batch_size, n_timesteps, self.vocab_size 
         input_idxs = torch.zeros([N,T], device=(self.device),dtype=torch.int64)
         target_idxs = torch.zeros([N,T], device=(self.device),dtype=torch.int64)
-
         # for every sequence in batch, store the indexes of every word
         for b in range(N):
             input_idxs[b,:] = torch.tensor([self.char_to_ix[ch] for ch in text[
@@ -255,7 +269,7 @@ class Model:
             self.layers.reverse()
             smooth_loss = 0.99 * smooth_loss + 0.01 * loss
             # sample from the model now and then
-            if t % 30 == 0:
+            if t % 100 == 0:
                 txt = self.sample('. ', 500)
                 print("#=========#\n{}\n#=========#".format(txt))
                 test_loss = self.test(n_timesteps, batch_size)
@@ -267,7 +281,8 @@ class Model:
                         layer.config['learning_rate'] *= 0.94
                     print("BREAK - learning_rate @ layer[0]: {}".format(self.layers[0].config['learning_rate']))
                     decay_counter = 0
-                if smooth_loss <= min(losses):
+                if test_loss <= min(test_losses):
+                    print(f'saving into {self.save_path}')
                     self.save(self.save_path)
                 decay_counter += 1
                 losses.append(smooth_loss)
@@ -275,7 +290,7 @@ class Model:
 
             pointer += n_timesteps * batch_size # move data pointer
             
-        return test_losses
+        
 
 
 
