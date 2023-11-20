@@ -94,16 +94,12 @@ python3 run.py --fine_tune --config=config.py
 
 - Finally, simply run on terminal:
 ```
-python3 run.py --test --config=config.py" 
+python3 run.py --test --config=config.py
 ```
 
 ### Results
-- The Recurrent Neural Network implementation in main.py achieved a loss of <b>1.22</b> with a 78 vocabulary size and ~2M tokens of training for 100,000 timesteps (32 batch_size, 200 n_iterations).
-- The LSTM achieved a loss of <b>1.11</b> with the same settings.
-- Training times seemed to be a little faster with GPU, but the improvement was not dramatic (maybe due to iterative and non-paralellizeable nature of RNNs).
-- Total training times: RNN ~4h, LSTM ~10h on one GTX1070 Nvidia GPU.
-- Result with ~4h of pretraining on reduced version of COCA (around 10M tokens) and ~1h of fine-tuning on <i>tiny_shakespeare</i> dataset:
-  
+- The Recurrent Neural Network implementation in main.py achieved a loss of <b>1.22</b> with a 78 vocabulary size and ~1M tokens of training for 50,000 timesteps.
+- It was trained on the <i>tiny shakespeare</i> text in `shakespeare.txt`. The results follow:  
 ```
 CORIOLANUS:
 I am the guilty us, friar is too tate.
@@ -111,19 +107,12 @@ I am the guilty us, friar is too tate.
 QUEEN ELIZABETH:
 You are! Marcius worsed with thy service, if nature all person, thy tear. My shame;
 I will be deaths well; I say
-Of day, who nay; embrace
+Of day, who nay, embrace
 The common on him;
 To him life looks,
 Yet so made thy breast,
-Wrapte,
-He kiss,
-Take up;
 From nightly:
 Stand good.
-
-MENENIUS HISHOP:
-O felt people
-Two slaund that strangely but conscience to me.
 
 BENVOLIO:
 Why, whom I come in his own share; so much for it;
@@ -132,4 +121,12 @@ Having done,
 And this is the rest in this in a fellow.
 ```
 - Note: results achieved with the model configuration exactly as presented in this repo.
+
+- The LSTM implementation achieved a loss of <b>1.11</b> with the same settings.
+- Total training times: RNN ~4h, LSTM ~10h on one GTX1070 Nvidia GPU.
+- Result with ~4h of pretraining on reduced version of COCA (around 10M tokens) and ~1h of fine-tuning on <i>tiny_shakespeare</i> dataset:
+```
+INFERENCE - HERE
+```
+- Note: Training times seemed to be a little faster with GPU, but the improvement was not dramatic (maybe due to iterative and non-paralellizeable nature of RNNs).
 - Thanks for reading!
