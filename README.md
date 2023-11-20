@@ -102,7 +102,7 @@ python3 run.py --test --config=config.py
 - It was trained on the <i>tiny shakespeare</i> text in `shakespeare.txt`. The results follow:  
 ```
 CORIOLANUS:
-I am the guilty us, friar is too tate.
+I am the guilty of us, friar is too tate.
 
 QUEEN ELIZABETH:
 You are! Marcius worsed with thy service, if nature all person, thy tear. My shame;
