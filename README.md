@@ -90,7 +90,7 @@ python3 run.py --fine_tune --config=config.py
   
 - Note: the testing script does not access any hyperparametes, because the model is already trained.
   
-- `model_layers` will not be accessed during fine-tuning, as you will use the layers of the pretrained model.
+- `model_layers` will not be accessed during testing, as you will use the layers of the pretrained model.
 
 - Finally, simply run on terminal:
 ```
