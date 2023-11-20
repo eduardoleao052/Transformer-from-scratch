@@ -37,7 +37,7 @@ pip install -r requirements.txt
   
 ### Pretraining
 - To pretrain a RNN on language modeling (predicting next character), first go into `config.py` and chose the necessary arguments.
-- Under `training_parameters`, choose:
+- In the `training_params` dictionary, choose:
   - `--corpus` (name of file in data directory with the text you want to train the model on) 
   - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
 - And you can choose the hyperparameters (although the defaults work pretty well):
@@ -60,7 +60,7 @@ python3 run.py --train --config=config.py
   
 ### Fine-tuning
 - To fine-tune a RNN on a given text file, go to `config.py` and choose the arguments:
-- Under `training_parameters`, choose:
+- In the `fine_tuning_params` dictionary, choose:
   - `--corpus` (name of file in data directory with the text you want to train the model on) 
   - `--from_path` (.json file that contains pretrained model)
   - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
@@ -83,7 +83,7 @@ python3 run.py --fine_tune --config=config.py
 
 ### Testing
 - To test your RNN, go to `config.py` and choose the arguments:
-- Under `training_parameters`, choose:
+- In the `testing_params` dictionary, choose:
   - `--from_path` (.json file that contains pretrained model) 
   - `--sample_size` (how many characters will be generated, "sounding" like the source text) <b>[OPTIONAL]</b>
   - `--seed` (the start to the string your model generates, it has to "continue" it) <b>[OPTIONAL]</b>
