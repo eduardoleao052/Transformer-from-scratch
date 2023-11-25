@@ -14,13 +14,12 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     """
     
     training_params = {
-        '--corpus': f"{PATH}/data/sanderson.txt", 
-        '--to_path': f"{PATH}/models/my_pretrained_model.json", 
-        '--seed': "",
+        '--corpus': f"{PATH}/data/shakespeare.txt", 
+        '--to_path': f"{PATH}/models/my_pretrained_lstm_model.json", 
         "n_iter": 150000,
-        "n_timesteps": 500,
-        "batch_size": 32,
-        "learning_rate": 0.001,
+        "n_timesteps": 512,
+        "batch_size": 16,
+        "learning_rate": 0.0006,
         "regularization": 0.001,
         "patience": 7,
         "evaluation_interval": 250
@@ -31,8 +30,8 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
         '--to_path': f"{PATH}/models/my_model.json", 
         '--from_path': f"{PATH}/models/my_pretrained_model.json",
         "n_iter": 20000,
-        "n_timesteps": 300,
-        "batch_size": 32,
+        "n_timesteps": 512,
+        "batch_size": 16,
         "learning_rate": 0.0001,
         "regularization": 0.001,
         "patience": 7,
@@ -40,7 +39,7 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
 
     }
     testing_params = {
-        '--from_path': f"{PATH}/models/my_pretrained_model.json", 
+        '--from_path': f"{PATH}/models/my_pretrained_lstm_model.json", 
         'n_timesteps': 750,
         '--seed': ". "
     }
@@ -50,9 +49,9 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     
     model_layers = [ 
         Embedding(vocab_size, 256, device = device),
-        RNN(256, 256, device = device),
+        LSTM(256, 256, device = device),
         TemporalDense(256, 256, device = device),
-        RNN(256, 256, device = device),
+        LSTM(256, 256, device = device),
         TemporalDense(256, vocab_size, device = device),
         TemporalSoftmax(device = device)
     ]
