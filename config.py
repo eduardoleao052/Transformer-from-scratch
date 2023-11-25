@@ -14,8 +14,8 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     """
     
     training_params = {
-        '--corpus': f"{PATH}/data/shakespeare.txt", 
-        '--to_path': f"{PATH}/models/my_model.json", 
+        '--corpus': f"{PATH}/data/sanderson.txt", 
+        '--to_path': f"{PATH}/models/my_pretrained_model.json", 
         '--sample_size': 500,
         '--seed': "",
         "n_iter": 150000,
@@ -28,10 +28,10 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     }
     fine_tuning_params = {
         '--corpus': f"{PATH}/data/sanderson.txt", 
-        '--to_path': f"{PATH}/models/my_fine_tuned_model.json", 
-        '--from_path': f"{PATH}/models/my_model.json",
+        '--to_path': f"{PATH}/models/my_model.json", 
+        '--from_path': f"{PATH}/models/my_pretrained_model.json",
         "n_iter": 20000,
-        "n_timesteps": 500,
+        "n_timesteps": 300,
         "batch_size": 32,
         "learning_rate": 0.0001,
         "regularization": 0.001,
@@ -39,7 +39,7 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
 
     }
     testing_params = {
-        '--from_path': f"{PATH}/models/my_model.json", 
+        '--from_path': f"{PATH}/models/my_pretrained_model.json", 
         '--sample_size': 750,
         '--seed': ""
     }
@@ -48,11 +48,11 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     vocab_size = _get_vocab_size(args,training_params['--corpus'],fine_tuning_params['--from_path'],testing_params['--from_path'])
     
     model_layers = [ 
-        TemporalDense(vocab_size, 500, device = device),
-        LSTM(500, 500, device = device),
-        TemporalDense(500, 500, device = device),
-        LSTM(500, 500, device = device),
-        TemporalDense(500, vocab_size, device = device),
+        TemporalDense(vocab_size, 512, device = device),
+        LSTM(512, 512, device = device),
+        TemporalDense(512, 512, device = device),
+        LSTM(512, 512, device = device),
+        TemporalDense(512, vocab_size, device = device),
         TemporalSoftmax(device = device)
     ]
     

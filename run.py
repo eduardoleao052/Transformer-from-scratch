@@ -12,14 +12,14 @@ def test_model(config):
 
     @param config (dict): dictionary with all the configurations of the model.
     """
-    model = Model(config, '', device=device)
+    model = Model(config['testing_params'], config['model_layers'], device=device)
 
     config = config['testing_params']
     model.load(config['--from_path'])
     print(config['--seed'] + model.sample(config['--seed'],config['--sample_size']))
    
 def train_model(config):
-    model = Model(config, config['training_params']['--to_path'], device=device)
+    model = Model(config['training_params'], config['model_layers'], device=device)
     model.load_text(config['training_params']['--corpus'])
 
     config = config['training_params']
@@ -31,7 +31,7 @@ def train_model(config):
                         config['patience'])
 
 def fine_tune(config):
-    model = Model(config, config['fine_tuning_params']['--to_path'], device=device)
+    model = Model(config['fine_tuning_params'], config['model_layers'], device=device)
 
     model.load(config['fine_tuning_params']['--from_path'])
 

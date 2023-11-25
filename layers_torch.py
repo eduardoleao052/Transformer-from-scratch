@@ -316,7 +316,7 @@ class LSTM:
         }
 
     def forward(self, x):
-        (N, T, I), H = x.shape, self.params['ba'].shape[0]
+        (N, T, I), H = x.shape, self.params['ba'].shape[0] // 4
         self.cache = []
         h = [torch.zeros([N,H],device=self.device)]
         next_c = torch.zeros([N,H],device=self.device)
@@ -333,7 +333,7 @@ class LSTM:
         return h 
 
     def forward_step(self, xt, h_prev, c_prev):
-        H = self.params['bh'].shape[0]
+        H = self.params['ba'].shape[0] // 4
 
         a = torch.matmul(xt, self.params['Wxa']) + torch.matmul(h_prev, self.params['Wha']) + self.params['ba']
         a = torch.split(a, H, dim=1)

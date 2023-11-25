@@ -5,22 +5,21 @@ from utils import build_logger
 import json
 
 class Model:
-    def __init__(self, config: dict, save_path: str, device: str) -> None:
+    def __init__(self, config: dict, layers: dict, device: str) -> None:
         """
         Initializes model. Has all layers setup with internal sizes.
 
-        @param config (dict): dictionary with hyperparameters and layers of the model.
-        @param save_path (str): path to .json file that will store model params
+        @param config (dict): dictionary with hyperparameters of the model.
+        @param layers (dict): dictionary with model layers.
         @param device (str): device to store tensors.
 
         """
-        self.save_path = save_path
+        self.save_path = config['--to_path']
         self.device = device
         self.preloaded = False
         self.logger = build_logger('output.logger@gmail.com','bcof jupb ugbh vfll')
-        self.layers = config['model_layers']
+        self.layers = layers
         self.vocab_size = self.layers[0].in_size 
-
         
     def load_text(self, file: str, val_size = 0.05) -> None:
         """
@@ -138,21 +137,14 @@ class Model:
         # generate text with len = [n_timesteps]
         for t in range(n_timesteps):   
             for layer in self.layers:
-                # choose which kind of layer this is (rnn, lstm, or fcc)
-                if 'Whh' in layer.params.keys(): # forward step for rnn
+                # choose which kind of layer this is
+                if layer.params['type'] == 2: # forward step for rnn
                     layer.h, _ = layer.forward_step(self.a, layer.h)
                     self.a = layer.h
-                elif 'Wha' in layer.params.keys(): # forward step for lstm
-                    # DEEP MEMORY TEST
-                    #====================================#
-                    if 'Wcm' in layer.params.keys(): 
-                        layer.h, layer.c, layer.m, _ = layer.forward_step(self.a, layer.h, layer.c, layer.m)
-                        self.a = layer.h
-                    #====================================#
-                    else: # forward step for fcc
+                elif layer.params['type'] == 3: # forward step for lstm
                         layer.h, layer.c, _ = layer.forward_step(self.a, layer.h, layer.c)
                         self.a = layer.h
-                else:
+                else: 
                     self.a, _ = layer.forward_step(self.a)
             idx = torch.distributions.categorical.Categorical(probs = self.a.ravel()).sample().item()
             self.a = torch.zeros_like(self.a, device=(self.device)) 
@@ -254,22 +246,37 @@ class Model:
             
             a = inputs.clone()
               
-            # forward pass
-            for layer in self.layers:
+            # forward pass (with residual connections)
+            for layer in self.layers[:-1]:
+                #a = layer.forward(a)
                 # layer.initialize_optimizer(learning_rate, regularization)
-                a = layer.forward(a)
-            
+                new_a = layer.forward(a)
+                # if the layer does not change input shape, use residuals
+                if new_a.shape == a.shape:
+                    a = a + new_a
+                else:
+                    a = new_a
+
             # calculate loss
+            a = self.layers[-1].forward(a)
             dz, loss = self.layers[-1].backward(target_idxs,a)
-            # backward pass
+
+            # backward pass (with residual connections)
             self.layers.reverse()
             for layer in self.layers[1:]:
-                dz = layer.backward(dz)
+                #dz = layer.backward(dz)
+                new_dz = layer.backward(dz)
+                # if the layer does not change input shape, use residuals
+                if new_dz.shape == dz.shape:
+                    dz = dz + new_dz
+                else:
+                    dz = new_dz
+                # update step
                 layer.optimize()
             self.layers.reverse()
             smooth_loss = 0.99 * smooth_loss + 0.01 * loss
             # sample from the model now and then
-            if t % 100 == 0:
+            if t % 150 == 0:
                 txt = self.sample('. ', 500)
                 print("#=========#\n{}\n#=========#".format(txt))
                 test_loss = self.test(n_timesteps, batch_size)
