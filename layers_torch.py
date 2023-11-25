@@ -3,28 +3,16 @@ import numpy as np
 from utils import *
 
 class Embedding:
-    def __init__(self, vocab_size, vec_dim = None, ohe = False):
-        self.ohe = ohe
+    def __init__(self, in_size, embed_size, device = 'cpu'):
+        self.params = {
+            'E': torch.randn(in_size, embed_size) / np.sqrt(in_size),
+            'type': torch.tensor([0])
+        }
+        self.params = {key: param.to(device) for key, param in self.params.items()} 
 
-        if vec_dim == None:
-            vec_dim = vocab_size
-
-        if ohe == False:
-            self.params = {
-                'E': torch.randn(vocab_size, vec_dim) / np.sqrt(vocab_size)
-            }
-
-        elif ohe == True:
-            assert vec_dim == vocab_size, "params: 'vec_dim' and 'vocab_size' need to be the same for 'ohe' Embedding."
-            e_ixs = torch.arange(0,vocab_size,1)
-            E = torch.zeros([vocab_size,vocab_size])
-            E[e_ixs,e_ixs] += 1
-            self.params = {
-                'E': E
-            }
-
-        self.in_size = vocab_size
-        self.out_size = vec_dim
+        self.in_size = in_size
+        self.out_size = embed_size
+        self.device = device
         
     def initialize_optimizer(self, lr, reg):
         self.config = {
@@ -33,8 +21,8 @@ class Embedding:
                        'beta1': .9,
                        'beta2':.99,
                        'epsilon':1e-8,
-                       'm_E':torch.zeros(self.params['E'].shape),
-                       'v_E':torch.zeros(self.params['E'].shape),
+                       'm_E':torch.zeros(self.params['E'].shape, device=self.device),
+                       'v_E':torch.zeros(self.params['E'].shape, device=self.device),
                        't':30,
         }
 
@@ -44,19 +32,18 @@ class Embedding:
         return x
 
     def backward(self, dx):
-        if self.ohe == False:
-            self.grads = {
-            'dx': dx,
-            'dE': torch.zeros_like(self.params['E'])
-            }
-            idx = self.cache
-            self.grads['dE'][idx] += dx
+        self.grads = {
+        'dx': dx,
+        'dE': torch.zeros_like(self.params['E'], device=self.device)
+        }
+
+        idx = self.cache
+        self.grads['dE'][idx] = dx
              
         return dx
     
     def optimize(self):
-        if self.ohe == False:
-            self.params, self.config = TorchAdam(self.params, self.grads, self.config)
+        self.params, self.config = TorchAdam(self.params, self.grads, self.config)
 
 
 class TemporalSoftmax:
