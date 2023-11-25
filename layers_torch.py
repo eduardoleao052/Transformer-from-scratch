@@ -45,7 +45,15 @@ class Embedding:
     def optimize(self):
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
 
+    def load_params(self, params_dict):
+        self.params = params_dict
 
+    def load_params(self, params_dict):
+        self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
+
+    def save_params(self):
+        return {key: value.tolist() for key, value in self.params.items()}
+    
 class TemporalSoftmax:
     def __init__(self, device = 'cpu'):
         self.params = {
@@ -99,6 +107,8 @@ class TemporalSoftmax:
     def optimize(self):
         pass
 
+    def save_params(self):
+        return {key: value.tolist() for key, value in self.params.items()}
 
 class TemporalDense:
     def __init__(self, in_size, out_size, device = 'cpu'):
@@ -176,6 +186,12 @@ class TemporalDense:
     def optimize(self):
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
 
+    def load_params(self, params_dict):
+        self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
+
+    def save_params(self):
+        return {key: value.tolist() for key, value in self.params.items()}
+    
 
 class RNN:
     def __init__(self, in_size, hidden_size, device = 'cpu'):
@@ -272,6 +288,11 @@ class RNN:
     def optimize(self):
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
 
+    def load_params(self, params_dict):
+        self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
+
+    def save_params(self):
+        return {key: value.tolist() for key, value in self.params.items()}
 
 class LSTM:
     def __init__(self, in_size, hidden_size, device = 'cpu'):
@@ -391,6 +412,12 @@ class LSTM:
 
     def optimize(self):
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
+
+    def load_params(self, params_dict):
+        self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
+
+    def save_params(self):
+        return {key: value.tolist() for key, value in self.params.items()}
 
 
 class DeepMemoryLSTM:
@@ -655,4 +682,51 @@ class TemporalBatchNorm:
     def optimize(self):
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
 
+class RNNBlock:
+    def __init__(self, in_size, out_size, device = 'cpu'):
+        self.device = device
+        self.params = {
+            'type': torch.tensor([2,1])
+        }
+        self.in_size = in_size
+        self.layers = [
+            RNN(in_size, out_size, device=device),
+            TemporalDense(out_size, out_size)
+        ]
 
+    def initialize_optimizer(self, lr, reg):
+        self.config = {
+                       'learning_rate': lr,
+        }
+        for layer in self.layers:
+            layer.initialize_optimizer(lr, reg)
+
+    def forward(self, x):
+        z = x.clone()
+        for layer in self.layers:
+            z = layer.forward(z)
+        assert (not torch.allclose(x,z)), 'residual not working'
+        return x + z
+
+    def backward(self, dz):
+        dx = dz.clone()
+        for layer in self.layers:
+            dx = layer.backward(dx)
+        assert (not torch.allclose(dx,dz)), 'residual not working'
+        return dz + dx 
+
+    def optimize(self):
+        for layer in self.layers:
+            layer.optimize() 
+
+    def load_params(self, params_dict):
+        self.params = params_dict
+        self.layers[0].load_params(self.params['rnn'])
+        self.layers[1].load_params(self.params['dense'])
+
+    def save_params(self):
+        return {
+            'rnn': self.layers[0].save_params(),
+            'dense': self.layers[1].save_params(),
+            'type': torch.tensor([2,1]).tolist()
+            }

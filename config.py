@@ -15,7 +15,7 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     
     training_params = {
         '--corpus': f"{PATH}/data/shakespeare.txt", 
-        '--to_path': f"{PATH}/models/my_pretrained_lstm_model.json", 
+        '--to_path': f"{PATH}/models/my_pretrained_model.json", 
         "n_iter": 150000,
         "n_timesteps": 512,
         "batch_size": 16,
@@ -49,9 +49,8 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     
     model_layers = [ 
         Embedding(vocab_size, 256, device = device),
-        LSTM(256, 256, device = device),
-        TemporalDense(256, 256, device = device),
-        LSTM(256, 256, device = device),
+        RNNBlock(256, 256, device = device),
+        RNNBlock(256, 256, device = device),
         TemporalDense(256, vocab_size, device = device),
         TemporalSoftmax(device = device)
     ]

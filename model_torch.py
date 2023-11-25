@@ -65,7 +65,9 @@ class Model:
 
         params = []
         for layer in self.layers:
-            params.append({key: value.tolist() for key, value in layer.params.items()})
+            layer_params = layer.save_params()
+            params.append(layer_params)
+        
         params.append(self.char_to_ix)
         params = json.dumps(params)
         file = open(path, 'w')
@@ -89,22 +91,26 @@ class Model:
         for i, param_dict in enumerate(param_list):
             if param_dict['type'] == [0]:
                 layer = Embedding(0, 0, device=self.device)
-                layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
+                layer.load_params(param_dict)
                 self.layers.append(layer)
             elif param_dict['type'] == [1]:
                 layer = TemporalDense(0, 0, device=self.device)
-                layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
+                layer.load_params(param_dict)
                 self.layers.append(layer)
             elif param_dict['type'] == [2]:
                 layer = RNN(0, 0, device=self.device)
-                layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
+                layer.load_params(param_dict)
                 self.layers.append(layer)
             elif param_dict['type'] == [3]:
                 layer = LSTM(0, 0, device=self.device)
-                layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
+                layer.load_params(param_dict)
                 self.layers.append(layer)
             elif param_dict['type'] == [4]:
                 layer = TemporalSoftmax(device=self.device)
+                self.layers.append(layer)
+            if param_dict['type'] == [2,1]:
+                layer = RNNBlock(0, 0, device=self.device)
+                layer.load_params(param_dict)
                 self.layers.append(layer)
         #get vocab size from the first dense layer in the loaded model
         self.vocab_size = self.layers[0].params['E'].shape[0]
@@ -123,23 +129,13 @@ class Model:
         for _ in range(self.config['n_timesteps']):
             idx_context = idx[:,-self.config['n_timesteps']:]
             a = idx_context.clone()
-            # forward pass
-            for layer in self.layers[:-1]:
-                #a = layer.forward(a)
-                # layer.initialize_optimizer(learning_rate, regularization)
-                new_a = layer.forward(a)
-                # if the layer does not change input shape, use residuals
-                if new_a.shape == a.shape:
-                    a = a + new_a
-                else:
-                    a = new_a
-            a = self.layers[-1].forward(a)
+
+            # forward pass with residuals:
+            for layer in self.layers:
+                a = layer.forward(a)
+            
             # (1, T, D) -> (1, D)
-            logits = a[:,-1,:]
-
-            probs = torch.exp(logits - torch.max(logits, axis=-1, keepdims=True)[0])
-            probs = logits / torch.sum(logits, axis= -1, keepdims=True) 
-
+            probs = a[:,-1,:]
             # Implement beam-search (?):
             idx_next = torch.multinomial(probs, num_samples=1)
             idx = torch.cat((idx,idx_next),dim=1)
@@ -169,19 +165,11 @@ class Model:
                     
             a = input_idxs.clone()
 
-            # forward pass
-            for layer in self.layers[:-1]:
-                #a = layer.forward(a)
-                # layer.initialize_optimizer(learning_rate, regularization)
-                new_a = layer.forward(a)
-                # if the layer does not change input shape, use residuals
-                if new_a.shape == a.shape:
-                    a = a + new_a
-                else:
-                    a = new_a
+            # forward pass with residuals:
+            for layer in self.layers:
+                a = layer.forward(a)
 
-            # calculate loss
-            a = self.layers[-1].forward(a)
+            # softmax:
             _, loss = self.layers[-1].backward(target_idxs,a)
 
             test_losses.append(loss.item())
@@ -233,32 +221,17 @@ class Model:
             input_idxs, target_idxs = self._get_batch(self.train_data, n_timesteps, batch_size)
             
             a = input_idxs.clone()
-              
-            # forward pass
-            for layer in self.layers[:-1]:
-                #a = layer.forward(a)
-                # layer.initialize_optimizer(learning_rate, regularization)
-                new_a = layer.forward(a)
-                # if the layer does not change input shape, use residuals
-                if new_a.shape == a.shape:
-                    a = a + new_a
-                else:
-                    a = new_a
 
-            # calculate loss
-            a = self.layers[-1].forward(a)
+            # forward pass with residuals:
+            for layer in self.layers:
+                a = layer.forward(a)
+
+            # softmax:
             dz, loss = self.layers[-1].backward(target_idxs,a)
-
             # backward pass
             self.layers.reverse()
             for layer in self.layers[1:]:
-                #dz = layer.backward(dz)
-                new_dz = layer.backward(dz)
-                # if the layer does not change input shape, use residuals
-                if new_dz.shape == dz.shape:
-                    dz = dz + new_dz
-                else:
-                    dz = new_dz
+                dz = layer.backward(dz)
                 # update step
                 layer.optimize()
             self.layers.reverse()
