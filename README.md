@@ -36,7 +36,20 @@ pip install -r requirements.txt
 - Note: The training is by default implemented to detect CUDA availability, and run on CUDA if found.
 - To run, install the necessary requirements and a text corpus (any text you wish to replicate, .txt format).
 - Please download your text file in the data directory.
-  
+
+### Build the Model
+- To customize the model layers, go into `config.py` and edit the `model_layers` dictionary.
+- Each layer takes as arguments the input and output sizes.
+- You may chose among the following layers:
+  - `Embedding` (turns input indexes into vectors)
+  - `TemporalDense` (simple fully-connected layer)
+  - `RNN` (Recurrent Neural Network layer)
+  - `RNNBlock` (RNN + TemporalDense with residual connections)
+  - `LSTM` (Long Short Term Memory layer)
+  - `TemporalSoftmax` (returns probabilities for next generated character)
+- Note: the first layer must be a `Embedding` layer with input size equals `vocab_size`.
+- Note: the last layer must be a `TemporalSoftmax` layer with the previous layer's output size equals `vocab_size`.
+
 ### Pretraining
 - To pretrain a RNN on language modeling (predicting next character), first go into `config.py` and chose the necessary arguments.
 - In the `training_params` dictionary, choose:
@@ -58,7 +71,7 @@ python3 run.py --train --config=config.py
 ```
 - Whenever you feel like the samples are good enough, you can kill the training at any time. This will NOT corrupt the model saved .json file, and you may proceed to testing and fine_tuning on smaller datasets.
 - Note: for pretraining, a really large text corpus is usually necessary. I obtained good results with ~1M characters.
-- Note: if you want to alter layers/dimensions, do so in the __config.py__ file.
+- Note: if you want to alter layers/dimensions, do so in the `config.py` file, as described in the __Build the Model__ section.
   
 ### Fine-tuning
 - To fine-tune a RNN on a given text file, go to `config.py` and choose the arguments:
