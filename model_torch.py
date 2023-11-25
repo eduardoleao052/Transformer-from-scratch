@@ -1,4 +1,4 @@
-﻿from layers_torch import TemporalDense, LSTM, RNN, TemporalSoftmax, TemporalBatchNorm, DeepMemoryLSTM
+﻿from layers_torch import *
 import torch, torch.cuda
 import numpy as np
 from utils import build_logger
@@ -14,12 +14,13 @@ class Model:
         @param device (str): device to store tensors.
 
         """
-        self.save_path = config['--to_path']
+        self.config = config
         self.device = device
         self.preloaded = False
         self.logger = build_logger('output.logger@gmail.com','bcof jupb ugbh vfll')
         self.layers = layers
         self.vocab_size = self.layers[0].in_size 
+
         
     def load_text(self, file: str, val_size = 0.05) -> None:
         """
@@ -42,16 +43,18 @@ class Model:
         else:
             text = ''.join([ch for ch in text if ch in self.char_to_ix.keys()])
 
-        self.train_text = ''
-        self.test_text = ''
+        train_text = ''
+        test_text = ''
         text_phrases = text.split('\n')
         for i in range(len(text_phrases)//100):
             text_to_add = '\n'.join(text_phrases[i * 100: (i+1) * 100])
             if np.random.randint(0,int(1/val_size)) == 0:
-                self.test_text += text_to_add
+                test_text += text_to_add
             else:
-                self.train_text += text_to_add
+                train_text += text_to_add
         
+        self.train_data = torch.tensor([self.char_to_ix[ch] for  ch in train_text], device=self.device)
+        self.test_data = torch.tensor([self.char_to_ix[ch] for  ch in train_text], device=self.device)
 
     def save(self, path:str) -> None:
         """
@@ -84,8 +87,9 @@ class Model:
         self.char_to_ix = param_list.pop()
         self.ix_to_char = {i:ch for ch, i in self.char_to_ix.items()}
         for i, param_dict in enumerate(param_list):
-            if param_dict['type'] == [4]:
-                layer = TemporalSoftmax(device=self.device)
+            if param_dict['type'] == [0]:
+                layer = Embedding(0, 0, device=self.device)
+                layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
                 self.layers.append(layer)
             elif param_dict['type'] == [1]:
                 layer = TemporalDense(0, 0, device=self.device)
@@ -99,59 +103,49 @@ class Model:
                 layer = LSTM(0, 0, device=self.device)
                 layer.params = {key: torch.tensor(value,device=self.device) for key, value in param_list[i].items()}
                 self.layers.append(layer)
+            elif param_dict['type'] == [4]:
+                layer = TemporalSoftmax(device=self.device)
+                self.layers.append(layer)
         #get vocab size from the first dense layer in the loaded model
-        self.vocab_size = self.layers[0].params['W'].shape[0]
+        self.vocab_size = self.layers[0].params['E'].shape[0]
 
-    def sample(self, seed:str, n_timesteps:int) -> list:
+    def sample(self, seed:str) -> list:
         """
         Generate indexes to test model's generative properties
         Generates list of indexes iteratively, based on initial string (seed)
 
         @param seed (str): string to start your generation with
-        @param n_timesteps (int): number of indexes generated after the end of "seed"
 
         @returns idxs (list): list with all indexes generated
         """
+        idx = torch.tensor([self.char_to_ix[ch] for ch in seed], dtype=torch.long, device=self.device)
+        idx = idx.reshape(1,-1)
+        for _ in range(self.config['n_timesteps']):
+            idx_context = idx[:,-self.config['n_timesteps']:]
+            a = idx_context.clone()
+            # forward pass
+            for layer in self.layers[:-1]:
+                #a = layer.forward(a)
+                # layer.initialize_optimizer(learning_rate, regularization)
+                new_a = layer.forward(a)
+                # if the layer does not change input shape, use residuals
+                if new_a.shape == a.shape:
+                    a = a + new_a
+                else:
+                    a = new_a
+            a = self.layers[-1].forward(a)
+            # (1, T, D) -> (1, D)
+            logits = a[:,-1,:]
 
-        # create list with indexes of seed, starting with 0:
-        idx = [0]+[self.char_to_ix[ch] for ch in seed]
+            probs = torch.exp(logits - torch.max(logits, axis=-1, keepdims=True)[0])
+            probs = logits / torch.sum(logits, axis= -1, keepdims=True) 
+
+            # Implement beam-search (?):
+            idx_next = torch.multinomial(probs, num_samples=1)
+            idx = torch.cat((idx,idx_next),dim=1)
         
-        # create input as one-hot-encoded vector of indexes:
-        inputs = torch.zeros((1, len(seed)+1, self.vocab_size),device=(self.device))
-        for t, timestep in enumerate(inputs[0]):
-            timestep[idx[t]] += 1
-
-    
-        # iterate through seed, build hidden and cell states of layers:
-        self.a = inputs.clone()
-        for layer in self.layers:
-            self.a = layer.forward(self.a)
-
-
-        # get last word for generation ([:,-1] to eliminate the [timesteps] dimension)    
-        self.a = self.a[:,-1]
-        # create list of all indexes generated (starting by current)
-        p = self.a.ravel()
-        
-        idxs = [torch.distributions.categorical.Categorical(probs = self.a.ravel()).sample().item()]
-        # generate text with len = [n_timesteps]
-        for t in range(n_timesteps):   
-            for layer in self.layers:
-                # choose which kind of layer this is
-                if layer.params['type'] == 2: # forward step for rnn
-                    layer.h, _ = layer.forward_step(self.a, layer.h)
-                    self.a = layer.h
-                elif layer.params['type'] == 3: # forward step for lstm
-                        layer.h, layer.c, _ = layer.forward_step(self.a, layer.h, layer.c)
-                        self.a = layer.h
-                else: 
-                    self.a, _ = layer.forward_step(self.a)
-            idx = torch.distributions.categorical.Categorical(probs = self.a.ravel()).sample().item()
-            self.a = torch.zeros_like(self.a, device=(self.device)) 
-            self.a[0,idx] += 1
-            idxs.append(idx)
-        txt = ''.join(self.ix_to_char[ix] for ix in idxs)
-        
+        # Collect all tokens sampled:
+        txt = ''.join(self.ix_to_char[ix.item()] for ix in idx[0,-self.config['n_timesteps']:])
         return txt
 
     def test(self, n_timesteps:int, batch_size:int) -> int:
@@ -167,54 +161,51 @@ class Model:
         test_pointer = 0
         test_losses = []
 
+        n_test_iter = len(self.test_data) // (n_timesteps * batch_size)
         # go through entire validation set:
-        while test_pointer + 2 * (n_timesteps * batch_size ) + 1 < len(self.test_text):
-            inputs, _, target_idxs = self._get_batch(self.test_text, test_pointer, n_timesteps, batch_size)
+        for t in range(n_test_iter):
+            #print(f"{t}/{n_test_iter}")
+            input_idxs, target_idxs = self._get_batch(self.test_data, n_timesteps, batch_size)
                     
-            a = inputs.clone()
+            a = input_idxs.clone()
 
             # forward pass
-            for layer in self.layers:
-                a = layer.forward(a)
+            for layer in self.layers[:-1]:
+                #a = layer.forward(a)
+                # layer.initialize_optimizer(learning_rate, regularization)
+                new_a = layer.forward(a)
+                # if the layer does not change input shape, use residuals
+                if new_a.shape == a.shape:
+                    a = a + new_a
+                else:
+                    a = new_a
 
             # calculate loss
+            a = self.layers[-1].forward(a)
             _, loss = self.layers[-1].backward(target_idxs,a)
 
             test_losses.append(loss.item())
             test_pointer += n_timesteps * batch_size # move data pointer
         return np.mean(test_losses)
 
-    def _get_batch(self, text:str, pointer:int, n_timesteps:int, batch_size:int) -> tuple:
+    def _get_batch(self, data:list, n_timesteps:int, batch_size:int) -> tuple:
         """
         Runs batched forward passes through the entire validation dataset (self.test_text)
         and computes the average of the test loss.
 
         @param text (str): entire corpus of text
-        @param pointer (int): index (location in the text) in current epoch
         @param n_timesteps (int): number of characters per sequence
         @param batch_size (int): number of sequences per batch
 
-        @returns inputs (torch.tensor): one_hot_encoded vector of inputs (shape N,T,Vocab)
         @returns inputs_idxs (torch.tensor): vector of input indexes (shape N,T)
         @returns target_idxs (torch.tensor): vector of target indexes (shape N,T)
         """
-        N, T, V = batch_size, n_timesteps, self.vocab_size 
-        input_idxs = torch.zeros([N,T], device=(self.device),dtype=torch.int64)
-        target_idxs = torch.zeros([N,T], device=(self.device),dtype=torch.int64)
-        # for every sequence in batch, store the indexes of every word
-        for b in range(N):
-            input_idxs[b,:] = torch.tensor([self.char_to_ix[ch] for ch in text[
-                pointer + ((b)*T): pointer + ((b+1)*T)
-                ]],device=self.device,dtype=torch.int64)
-            target_idxs[b,:] = torch.tensor([int(self.char_to_ix[ch]) for ch in text[
-                1 + pointer + ((b)*T): 1 + pointer + ((b+1)*T)
-                ]],device=self.device,dtype=torch.int64)
-        
-        # one-hot-encode indexes
-        inputs = torch.zeros((N, T, V),device=self.device)
-        inputs.scatter_(2,input_idxs.unsqueeze(dim=2),torch.ones(N,T,V,device=self.device)) 
+        B, T, V = batch_size, n_timesteps, self.vocab_size 
+        pointers = torch.randint(len(data) - T, size=(B,))
+        input_idxs = torch.stack([data[p : p + T] for p in pointers])
+        target_idxs = torch.stack([data[p+1: p+1 + T] for p in pointers])
 
-        return inputs, input_idxs, target_idxs
+        return input_idxs, target_idxs
     
     def train(self, n_iter: int, n_timesteps: int, batch_size: int,learning_rate=1e-3,regularization=1e-3,patience = 7) -> None: 
         """
@@ -238,15 +229,12 @@ class Model:
 
         smooth_loss = -np.log(1.0/self.vocab_size)
         for t in range(n_iter):
+            #print(f"{t}/{n_iter}")
+            input_idxs, target_idxs = self._get_batch(self.train_data, n_timesteps, batch_size)
             
-            if pointer + (n_timesteps * batch_size ) + 1 >= len(self.train_text): 
-                pointer = np.random.randint(0,n_timesteps//2) # start from random point of data
-            
-            inputs, _, target_idxs = self._get_batch(self.train_text, pointer, n_timesteps, batch_size)
-            
-            a = inputs.clone()
+            a = input_idxs.clone()
               
-            # forward pass (with residual connections)
+            # forward pass
             for layer in self.layers[:-1]:
                 #a = layer.forward(a)
                 # layer.initialize_optimizer(learning_rate, regularization)
@@ -261,7 +249,7 @@ class Model:
             a = self.layers[-1].forward(a)
             dz, loss = self.layers[-1].backward(target_idxs,a)
 
-            # backward pass (with residual connections)
+            # backward pass
             self.layers.reverse()
             for layer in self.layers[1:]:
                 #dz = layer.backward(dz)
@@ -274,10 +262,11 @@ class Model:
                 # update step
                 layer.optimize()
             self.layers.reverse()
-            smooth_loss = 0.99 * smooth_loss + 0.01 * loss
+            smooth_loss = 0.95 * smooth_loss + 0.05 * loss
+            print(f'iter {t}, loss {smooth_loss}')
             # sample from the model now and then
-            if t % 150 == 0:
-                txt = self.sample('. ', 500)
+            if t % self.config['evaluation_interval'] == 0:
+                txt = self.sample('. ')
                 print("#=========#\n{}\n#=========#".format(txt))
                 test_loss = self.test(n_timesteps, batch_size)
                 print(f'iter {t}, loss: {smooth_loss}, test_loss {test_loss}') 
@@ -289,17 +278,10 @@ class Model:
                     print("BREAK - learning_rate @ layer[0]: {}".format(self.layers[0].config['learning_rate']))
                     decay_counter = 0
                 if test_loss <= min(test_losses):
-                    print(f'saving into {self.save_path}')
-                    self.save(self.save_path)
+                    print(f"saving into {self.config['--to_path']}")
+                    self.save(self.config['--to_path'])
                 decay_counter += 1
                 losses.append(smooth_loss)
                 test_losses.append(test_loss)
-
-            pointer += n_timesteps * batch_size # move data pointer
             
         
-
-
-
-
-

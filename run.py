@@ -16,7 +16,7 @@ def test_model(config):
 
     config = config['testing_params']
     model.load(config['--from_path'])
-    print(config['--seed'] + model.sample(config['--seed'],config['--sample_size']))
+    print(config['--seed'] + model.sample(config['--seed']))
    
 def train_model(config):
     model = Model(config['training_params'], config['model_layers'], device=device)
