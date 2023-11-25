@@ -1,12 +1,13 @@
 # LSTM From Scratch in Vanilla Python
-- Use this repo to train and test your own RNN and LSTM. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it. Also, feel free to browse the classes in `layers.py`. They contain full and clear implementations of every layer in a RNN.
+- Use this repo to train and test your own RNN and LSTM. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it. Also, feel free to browse the classes in `torch_layers.py` and `numpy_implementations/layers.py`. They contain full and clear implementations of every layer in a RNN.
 - This project started as a way to better understand the underlying principles of NLP. As I implemented these models, I tried to make the code as simple and well-documented as possible. This way, I hoped to make the (at first, very confusing) backpropagation through time a little bit simpler to understand and replicate.
 - Some motivation for this project also came from <i>Artificial intelligence, a Guide for Thinking Humans</i> by Melanie Mirchell.
 - In many layers, I took inspiration from my work on assignments A1-A3 of the CS231n class, and A1-A5 of CS224n.
 
 ## 1. Project Structure
+- `numpy_implementations/` : Folder with model and every layer implemented from scratch using only numpy.
 
-- `data/` : Folder to store the text file. Currently holds shakespeare.txt (which is the default) and bee_gees.txt.
+- `data/` : Folder to store the text file. Currently holds shakespeare.txt (which is the default).
 
 - `models/` : Folder which stores the saved models. Further explaination in section 2.
 
@@ -99,8 +100,8 @@ python3 run.py --test --config=config.py
 ```
 
 ## 3. Results
-- The Recurrent Neural Network implementation in main.py achieved a loss of <b>1.22</b> with a 78 vocabulary size and ~1M tokens of training for 50,000 timesteps and ~2h.
-- It was trained on the <i>tiny shakespeare</i> text in `shakespeare.txt`. The results follow:  
+- The Recurrent Neural Network implementation in main.py achieved a loss of <b>1.42</b> with a 78 vocabulary size training on the <i>tiny shakespeare</i> corpus in `shakespeare.txt`.
+- Note: the training took ~1h and 1500 steps.
 ```
 CORIOLANUS:
 I am the guilty of us, friar is too tate.
@@ -123,11 +124,23 @@ And this is the rest in this in a fellow.
 ```
 - Note: results achieved with the model configuration exactly as presented in this repo.
 
-- The LSTM implementation achieved a loss of <b>1.11</b> with the same settings.
-- Total training times: RNN ~2h, LSTM ~10h on one GTX1070 Nvidia GPU.
-- Result with ~4h of pretraining on reduced version of COCA (around 10M tokens) and ~1h of fine-tuning on <i>tiny_shakespeare</i> dataset:
+- The Long Short Term Memory (LSTM) implementation, using LSTMs instead of RNNs, achieved a loss of <b>1.32</b> with a 78 vocabulary size training on the <i>tiny shakespeare</i> corpus in `shakespeare.txt`.
+- Note: the training took ~2h30 and 1500 steps.
 ```
-INFERENCE - HERE
+HERMIONE:
+Of all the sin of the hard heart; and hence,
+For all the blessing from the king.
+
+QUEEN ELIZABETH:
+Ah, that away?
+
+HERMIONE:
+I'll go along.
+
+QUEEN ELIZABETH:
+Thou wear'st out yourself, and indeed Edward,
+and his hours' vent, O why, away.
 ```
-- Note: Training times seemed to be a little faster with GPU, but the improvement was not dramatic (maybe due to iterative and non-paralellizeable nature of RNNs).
+- Note: Training times seemed to be a little faster with GPU (GTX 1070 vs M2 CPU), but the improvement was not dramatic (maybe due to iterative and non-paralellizeable nature of RNNs).
 - Thanks for reading!
+
