@@ -107,12 +107,8 @@ class Model:
             elif param_dict['type'] == [4]:
                 layer = TemporalSoftmax(device=self.device)
                 self.layers.append(layer)
-            elif param_dict['type'] == [2,1]:
-                layer = RNNBlock(0, 0, device=self.device)
-                layer.load_params(param_dict)
-                self.layers.append(layer)
             elif param_dict['type'] == [1,7,1]:
-                layer = RNNBlock(0, 0, device=self.device)
+                layer = FullyConnected(0, 0, device=self.device)
                 layer.load_params(param_dict)
                 self.layers.append(layer)
         #get vocab size from the first dense layer in the loaded model

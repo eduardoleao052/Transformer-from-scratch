@@ -303,9 +303,8 @@ class MultiHeadSelfAttention:
 
         # Every row (0:T) in att[B, num_heads] becomes probability distribution of first (T+1) words.
         att = att/(H)**(0.5)
-        logits = F.softmax(att, dim=-1)
-        # logits = torch.exp(att - torch.max(att, axis=-1, keepdims=True)[0])
-        # logits = logits / torch.sum(logits, axis= -1, keepdims=True) 
+        logits = torch.exp(att - torch.max(att, axis=-1, keepdims=True)[0])
+        logits = logits / torch.sum(logits, axis= -1, keepdims=True) 
 
         # (B, num_heads, T, T) @ (B, num_heads, T, H) -> (B, num_heads, T, H)
         out = torch.einsum('bnTt, bnth -> bnTh', logits, v)
