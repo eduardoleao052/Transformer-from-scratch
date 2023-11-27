@@ -20,7 +20,6 @@ class Model:
         self.logger = build_logger('output.logger@gmail.com','bcof jupb ugbh vfll')
         self.layers = layers
         self.vocab_size = self.layers[0].in_size 
-
         
     def load_text(self, file: str, val_size = 0.05) -> None:
         """
@@ -108,7 +107,11 @@ class Model:
             elif param_dict['type'] == [4]:
                 layer = TemporalSoftmax(device=self.device)
                 self.layers.append(layer)
-            if param_dict['type'] == [2,1]:
+            elif param_dict['type'] == [2,1]:
+                layer = RNNBlock(0, 0, device=self.device)
+                layer.load_params(param_dict)
+                self.layers.append(layer)
+            elif param_dict['type'] == [1,7,1]:
                 layer = RNNBlock(0, 0, device=self.device)
                 layer.load_params(param_dict)
                 self.layers.append(layer)
@@ -214,42 +217,56 @@ class Model:
 
         for layer in self.layers:
             layer.initialize_optimizer(learning_rate, regularization)
-
+            
         smooth_loss = -np.log(1.0/self.vocab_size)
         for t in range(n_iter):
-            #print(f"{t}/{n_iter}")
+            print(f'iter: {t}, loss: {smooth_loss}')
             input_idxs, target_idxs = self._get_batch(self.train_data, n_timesteps, batch_size)
             
             a = input_idxs.clone()
 
-            # forward pass with residuals:
+            # forward pass:
+            self.logger.info('=======================')
             for layer in self.layers:
+                self.logger.info(f'{layer}, forward')
                 a = layer.forward(a)
+                self.logger.info(f'{layer}, forward')
 
             # softmax:
             dz, loss = self.layers[-1].backward(target_idxs,a)
             # backward pass
             self.layers.reverse()
+            self.logger.info('=================')
             for layer in self.layers[1:]:
+                self.logger.info(f'{layer}, backward')
                 dz = layer.backward(dz)
+                self.logger.info(f'{layer}, backward')
+            
                 # update step
                 layer.optimize()
             self.layers.reverse()
             smooth_loss = 0.95 * smooth_loss + 0.05 * loss
-            print(f'iter {t}, loss {smooth_loss}')
-            # sample from the model now and then
+            # evaluation step:
             if t % self.config['evaluation_interval'] == 0:
+                
+                # generate text sample:
                 txt = self.sample('. ')
                 print("#=========#\n{}\n#=========#".format(txt))
+
+                # calculate loss on the test set:
                 test_loss = self.test(n_timesteps, batch_size)
                 print(f'iter {t}, loss: {smooth_loss}, test_loss {test_loss}') 
                 self.logger.info(f'iter {t}, loss: {smooth_loss}, test_loss {test_loss}')
 
-                if test_loss > test_losses[-1] and decay_counter >= patience:
+                # decay learning rate if test_loss does not improve:
+                if test_loss >= test_losses[-1] and decay_counter >= patience:
                     for layer in self.layers:
-                        layer.config['learning_rate'] *= 0.94
+                        layer.decay_lr()
                     print("BREAK - learning_rate @ layer[0]: {}".format(self.layers[0].config['learning_rate']))
+                    self.logger.info("BREAK - learning_rate @ layer[0]: {}".format(self.layers[0].config['learning_rate']))
                     decay_counter = 0
+
+                # save model parameters if this is the best model yet:
                 if test_loss <= min(test_losses):
                     print(f"saving into {self.config['--to_path']}")
                     self.save(self.config['--to_path'])

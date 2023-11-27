@@ -18,24 +18,24 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
         '--to_path': f"{PATH}/models/my_pretrained_model.json", 
         "n_iter": 150000,
         "n_timesteps": 512,
-        "batch_size": 16,
+        "batch_size": 32,
         "learning_rate": 0.0006,
         "regularization": 0.001,
-        "patience": 7,
-        "evaluation_interval": 250
+        "patience": 5,
+        "evaluation_interval": 2500
 
     }
     fine_tuning_params = {
         '--corpus': f"{PATH}/data/shakespeare.txt", 
         '--to_path': f"{PATH}/models/my_model.json", 
-        '--from_path': f"{PATH}/models/my_pretrained_model.json",
+        '--from_path': f"{PATH}/models/my_pretrained_lstm_model.json",
         "n_iter": 20000,
         "n_timesteps": 512,
         "batch_size": 16,
-        "learning_rate": 0.0001,
+        "learning_rate": 0.00005,
         "regularization": 0.001,
         "patience": 7,
-        "evaluation_interval": 250
+        "evaluation_interval": 100
 
     }
     testing_params = {
@@ -49,11 +49,29 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     
     model_layers = [ 
         Embedding(vocab_size, 256, device = device),
-        RNNBlock(256, 256, device = device),
-        RNNBlock(256, 256, device = device),
+        LayerNorm(256),
+        RNN(256,256, device = device),
+        FullyConnected(256, 256, device = device),
+        LayerNorm(256),
+        RNN(256,256, device = device),
+        FullyConnected(256, 256, device = device),
         TemporalDense(256, vocab_size, device = device),
         TemporalSoftmax(device = device)
     ]
+
+    # model_layers = [ 
+    #     Embedding(vocab_size, 256, device = device),
+    #     RNN(256,256,device=device),
+    #     TemporalDense(256, 256 * 4, device = device),
+    #     ReLU(),
+    #     TemporalDense(256 * 4, 256, device=device),
+    #     RNN(256,256,device=device),
+    #     TemporalDense(256, 256 * 4, device = device),
+    #     ReLU(),
+    #     TemporalDense(256 * 4, 256, device=device),
+    #     TemporalDense(256, vocab_size, device = device),
+    #     TemporalSoftmax(device = device)
+    # ]
     
 
     MODEL_CONFIG = {
