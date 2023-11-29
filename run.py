@@ -1,9 +1,8 @@
-﻿from model_torch import Model 
+﻿from src.model import Model 
 from argparse import ArgumentParser
-import json
 import torch, torch.cuda
 import os
-from utils import _build_config_function
+from src.utils import _build_config_function
 
 def test_model(config):
     """
@@ -18,7 +17,7 @@ def test_model(config):
     config['dropout_prob'] = 0
     model.load(config['--from_path'])
     model.load_text(config['--testing_corpus'])
-    print(config['--seed'] + model.sample(config['--seed']))
+    print(config['seed'] + model.sample(config['seed']))
     print(model.test(config['n_timesteps'],batch_size=16))
    
 def train_model(config):

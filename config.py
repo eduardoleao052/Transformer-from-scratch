@@ -1,6 +1,7 @@
 """Model configuration."""
-from layers_torch import *
-from utils import _get_config_info
+from src.layers import *
+from src.layers_recurrent import *
+from src.utils import _get_config_info
 
 def build_config(args: dict, device: str, PATH: str) -> dict:
     """
@@ -14,16 +15,17 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     """
     
     training_params = {
-        '--corpus': f"{PATH}/data/shakespeare.txt", 
+        '--corpus': f"{PATH}/data/jules_verne.txt", 
         '--to_path': f"{PATH}/models/my_pretrained_model.json", 
         "n_iter": 150000,
-        "n_timesteps": 196,
+        "n_timesteps": 384,
         "batch_size": 16,
         "learning_rate": 2e-4,
         "regularization": 2e-4,
         "dropout_prob": 0.2,
         "patience": 5,
-        "evaluation_interval": 1500
+        "evaluation_interval": 500,
+        "evaluation_n_timesteps": 500
 
     }
     fine_tuning_params = {
@@ -31,38 +33,25 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
         '--to_path': f"{PATH}/models/my_model.json", 
         '--from_path': f"{PATH}/models/my_pretrained_model.json",
         "n_iter": 20000,
-        "n_timesteps": 512,
         "batch_size": 16,
-        "learning_rate": 0.00005,
-        "regularization": 0.001,
-        "dropout_prob": 0,
+        "learning_rate": 2e-5,
+        "regularization": 2e-4,
+        "dropout_prob": 0.2,
         "patience": 7,
-        "evaluation_interval": 100,
-        
+        "evaluation_interval": 500,
+        "evaluation_n_timesteps": 600
 
     }
     testing_params = {
         '--from_path': f"{PATH}/models/my_pretrained_model.json", 
-        'n_timesteps': 750,
-        '--seed': ". ",
         '--testing_corpus': f"{PATH}/data/shakespeare.txt", 
+        'seed': "ROMEO",
+        'evaluation_n_timesteps': 600
     }
 
     #gets the vocabulary size (num of unique characters) that the model will accept as input.
     vocab_size, n_timesteps = _get_config_info(args,training_params,fine_tuning_params,testing_params)
     
-    # model_layers = [ 
-    #     Embedding(vocab_size, 256, device = device),
-    #     LayerNorm(256),
-    #     RNN(256,256, device = device),
-    #     FullyConnected(256, 256, dropout_prob=0.2, device = device),
-    #     LayerNorm(256),
-    #     RNN(256,256, device = device),
-    #     FullyConnected(256, 256, dropout_prob=0.2, device = device),
-    #     TemporalDense(256, vocab_size, device = device),
-    #     TemporalSoftmax(device = device)
-    # ]
-
     # model_layers = [ 
     #     Embedding(vocab_size, 128, device = device),
     #     RNN(128,128,device=device),
@@ -76,6 +65,7 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     model_layers = [ 
         Embedding(vocab_size, 256, device=device),
         PositionalEmbedding(n_timesteps, 256, device=device),
+        Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
         Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
         Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
         Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
