@@ -15,10 +15,10 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     """
     
     training_params = {
-        '--corpus': f"{PATH}/data/jules_verne.txt", 
+        '--corpus': f"{PATH}/data/shakespeare.txt", 
         '--to_path': f"{PATH}/models/my_pretrained_model.json", 
         "n_iter": 150000,
-        "n_timesteps": 384,
+        "n_timesteps": 196,
         "batch_size": 16,
         "learning_rate": 2e-4,
         "regularization": 2e-4,
@@ -65,10 +65,6 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     model_layers = [ 
         Embedding(vocab_size, 256, device=device),
         PositionalEmbedding(n_timesteps, 256, device=device),
-        Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
         Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
         Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
         LayerNorm(256, device=device),
