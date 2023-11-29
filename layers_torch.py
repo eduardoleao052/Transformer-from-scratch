@@ -8,7 +8,12 @@ class Layer:
         pass
 
     def initialize_optimizer(self, lr, reg):
-        pass
+        self.config = {
+            'learning_rate': lr
+        }
+    
+    def __call__(self, x):
+        return self.forward(x)
 
     def optimize(self):
         pass
@@ -16,8 +21,15 @@ class Layer:
     def save_params(self):
         return {key: value.tolist() for key, value in self.params.items()}
     
+    def load_params(self, params_dict):
+        self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
+    
     def decay_lr(self):
-        pass
+        self.config['learning_rate'] *= 0.9
+
+    def set_mode(self, mode: str) -> None:
+        '''Choose mode between "train" and "test"'''
+        self.mode = mode
 
 
 
@@ -65,18 +77,56 @@ class Embedding(Layer):
     def optimize(self):
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
 
-    def load_params(self, params_dict):
-        self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
 
-    def save_params(self):
-        return {key: value.tolist() for key, value in self.params.items()}
+
+
+class PositionalEmbedding(Layer):
+    def __init__(self, n_timesteps, embed_size, device = 'cpu'):
+        super().__init__()
+        self.params = {
+            'E': torch.randn(n_timesteps, embed_size) / np.sqrt(n_timesteps),
+            'type': torch.tensor([-1])
+        }
+        self.params = {key: param.to(device) for key, param in self.params.items()} 
+
+        self.n_timesteps = n_timesteps
+        self.out_size = embed_size
+        self.device = device
+        
+    def initialize_optimizer(self, lr, reg):
+        self.config = {
+                       'learning_rate': lr,
+                       'regularization': reg,
+                       'beta1': .9,
+                       'beta2':.99,
+                       'epsilon':1e-8,
+                       'm_E':torch.zeros(self.params['E'].shape, device=self.device),
+                       'v_E':torch.zeros(self.params['E'].shape, device=self.device),
+                       't':30,
+        }
+
+    def forward(self, x):
+        B, T, D = x.shape
+        x += self.params['E'][:T,:]
+        return x
+
+    def backward(self, dx):
+        self.grads = {
+        'dx': dx,
+        'dE': torch.zeros_like(self.params['E'], device=self.device)
+        }
+
+        B, T, D = dx.shape
+        self.grads['dE'][:T,:] = dx.sum(dim=0) / B
+             
+        return dx
     
-    def decay_lr(self):
-        self.config['learning_rate'] *= 0.9
+    def optimize(self):
+        self.params, self.config = TorchAdam(self.params, self.grads, self.config)
 
 
 
-class TemporalSoftmax(Layer):
+class CrossEntropyLoss(Layer):
     def __init__(self, device = 'cpu'):
         super().__init__()
         self.params = {
@@ -84,43 +134,35 @@ class TemporalSoftmax(Layer):
         }
 
     def forward(self, z):
-        N, T, D = z.shape
-        probs = []
-        for t in range(T):
-            prob_t, _ = self.forward_step(z[:,t])
-            probs.append(prob_t)
+        B, T, D = z.shape
 
-        return torch.stack(probs, axis=1)
-    
-    def forward_step(self, z):
-        prob_t = torch.exp(z - torch.max(z, axis=1, keepdims=True)[0])
-        prob_t = prob_t / torch.sum(prob_t, axis= 1, keepdims=True)
-        cache = (None)
-        return prob_t, cache
-    
+        # flatten z to apply simple indexing:
+        z = z.reshape(B*T,D)
+        logits = torch.exp(z - torch.max(z, axis=1, keepdims=True)[0])
+        logits = logits / torch.sum(logits, axis= 1, keepdims=True)
+        logits = logits.reshape(B,T,D)
+
+        self.cache = (None)
+
+        return logits
 
     def backward(self, y, y_pred):
-        N, T, V = y_pred.shape
-        dz = []
-        loss = 0
+        B, T, D = y_pred.shape
 
-        for t in range(T):
-            dz_t, loss_t = self.backward_step(y[:,t], y_pred[:,t])
-            dz.append(dz_t)
-            loss += loss_t / T
+        # flatten y_pred and y to apply simple indexing:
+        y_pred = y_pred.reshape(B*T,D)
+        y = y.type(torch.long).reshape(B*T)
 
-        return torch.stack(dz, axis=1), loss
-
-    def backward_step(self, yt, y_pred_t):
-        N, D = y_pred_t.shape
-        dz_t = y_pred_t.clone()
-        yt = yt.type(torch.long)
-        dz_t[torch.arange(N), yt] -= 1
-        dz_t /= N
+        # get derivative wrt imput (z):
+        dz = y_pred.clone()
+        dz[torch.arange(B*T), y] -= 1
+        dz /= B
+        dz = dz.reshape(B,T,D)
             
-        log_losses = torch.log(y_pred_t[torch.arange(N), yt])
-        loss_t = -torch.sum(log_losses) / (N)
-        return dz_t, loss_t
+        # get cross-entropy loss:
+        log_losses = torch.log(y_pred[torch.arange(B*T), y])
+        loss = -torch.sum(log_losses) / (B * T)
+        return dz, loss
 
 
 
@@ -128,7 +170,7 @@ class ReLU(Layer):
     def __init__(self):
         super().__init__()
         self.params = {
-            'type':torch.tensor([7])
+            'type':torch.tensor([5])
         }
         self.mask = None
 
@@ -143,11 +185,58 @@ class ReLU(Layer):
 
 
 
-class TemporalDense:
+class Softmax(Layer):
+    def __init__(self):
+        super().__init__()
+        self.params = {
+            'type':torch.tensor([10])
+        }
+
+    def forward(self, z, dim=-1):
+        z = torch.exp(z - z.max(axis=dim, keepdims=True)[0])
+        out = z / torch.sum(z, dim=dim, keepdims=True)
+        self.cache = (out, dim)
+        return out
+
+    def __call__(self, z, dim):
+        return self.forward(z, dim=dim)
+
+    def backward(self, dout):
+        out, dim = self.cache
+        dz = out * (dout - torch.sum(out*dout, dim=dim, keepdims=True))
+        return dz
+
+
+
+class Dropout(Layer):
+    def __init__(self,drop_prob):
+        super().__init__()
+        self.params = {
+            'type': torch.tensor([11])
+        }
+        self.p = drop_prob
+        
+    def forward(self,z):
+        if self.mode == 'test':
+            return z
+        self.mask = (torch.rand(*z.shape) > self.p)
+        a = torch.where(self.mask, z, 0) 
+        a = a / (1 - self.p)
+        return a
+        
+    def backward(self,da):
+        dz = torch.where(self.mask, da, 0)
+        return dz
+
+
+
+class TemporalDense(Layer):
     def __init__(self, in_size, out_size, bias = True, device = 'cpu'):
+        super().__init__()
         self.device = device
         self.bias = bias
         self.params = {
+            #'W': torch.ones(in_size,out_size,dtype=torch.float32),
             'W': torch.randn(in_size, out_size) / np.sqrt(in_size),
             'b': torch.zeros(out_size),
             'type': torch.tensor([1])
@@ -195,23 +284,15 @@ class TemporalDense:
     def optimize(self):
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
 
-    def load_params(self, params_dict):
-        self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
-
-    def save_params(self):
-        return {key: value.tolist() for key, value in self.params.items()}
-    
-    def decay_lr(self):
-        self.config['learning_rate'] *= 0.9
 
 
-
-class LayerNorm:
+class LayerNorm(Layer):
     def __init__(self, n_embed, device='cpu'):
+        super().__init__()
         self.params = {
             'gamma': torch.ones([1, n_embed],device=device),
             'beta': torch.zeros([1, n_embed],device=device),
-            'type':torch.tensor([8])
+            'type':torch.tensor([6])
         }
         self.device = device
 
@@ -258,138 +339,246 @@ class LayerNorm:
     def optimize(self):
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
 
-    def load_params(self, params_dict):
-        self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
-
-    def save_params(self):
-        return {key: value.tolist() for key, value in self.params.items()}
-    
-    def decay_lr(self):
-        self.config['learning_rate'] *= 0.9
 
 
-
-class MultiHeadSelfAttention:
-    def __init__(self, in_size, n_heads, n_timesteps, device='cpu'):
-        self.key = TemporalDense(in_size, in_size)
-        self.query = TemporalDense(in_size, in_size)
-        self.value = TemporalDense(in_size, in_size)
-        self.mask = torch.tril(torch.ones(n_timesteps,n_timesteps,device=device))
-        self.H = in_size // n_heads # head_size
-
-        assert in_size % n_heads==0, "embedding dimension not divisible in equal heads."
-
-    def forward(self,key):
-        B, T, D = key.shape
-        H = self.H
-
-        k = self.key(key) # (B, T, D) @ (D, D) -> (B, T, D)
-        q = self.query(key) # (B, T, D) @ (D, D) -> (B, T, D)
-        v = self.value(key) # (B, T, D) @ (D, D) -> (B, T, D)
-
-        k_heads = k.split(H, dim=-1) # num_heads * (B, T, H)
-        q_heads = q.split(H, dim=-1) # num_heads * (B, T, H)
-        v_heads = v.split(H, dim=-1) # num_heads * (B, T, H)
-
-        k = torch.stack(k_heads, dim=1) # (B, num_heads, T, H)
-        q = torch.stack(q_heads, dim=1) # (B, num_heads, T, H)
-        v = torch.stack(v_heads, dim=1) # (B, num_heads, T, H)
-
-        # (B, num_heads, T, H) @ (B, num_heads, H, T) -> (B, num_heads, T, T)
-        att_activation = torch.einsum('bnTh, bnht -> bnTt',q, k.transpose(-2,-1)) 
-
-        # Every row (0:T) in att[B, num_heads] keeps only first (T+1) words.
-        att = att_activation.masked_fill(self.mask[:T,:T] == 0, float('-inf'))
-
-        # Every row (0:T) in att[B, num_heads] becomes probability distribution of first (T+1) words.
-        att = att/(H)**(0.5)
-        logits = torch.exp(att - torch.max(att, axis=-1, keepdims=True)[0])
-        logits = logits / torch.sum(logits, axis= -1, keepdims=True) 
-
-        # (B, num_heads, T, T) @ (B, num_heads, T, H) -> (B, num_heads, T, H)
-        out = torch.einsum('bnTt, bnth -> bnTh', logits, v)
-
-        out = out.transpose(1,2) # (B, num_heads, T, H) -> (B, T, num_heads, H)
-        out = out.reshape(B,T,D) # (B, T, num_heads, H) -> (B,T,D)
-
-        return out
-
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
-        return self.forward(args, kwds)
-
-
-
-class FullyConnected:
-    def __init__(self, in_size, out_size, device = 'cpu'):
-        self.device = device
+class MultiHeadSelfAttention(Layer):
+    def __init__(self, in_size, out_size, n_heads, n_timesteps, dropout_prob=0, device='cpu'):
+        super().__init__()
         self.params = {
-            'type': torch.tensor([1,7,1])
+            'type': torch.tensor([8])
         }
+        self.Wk = TemporalDense(in_size, in_size)
+        self.Wq = TemporalDense(in_size, in_size)
+        self.Wv = TemporalDense(in_size, in_size)
+        self.residual_proj = TemporalDense(in_size, out_size)
+        self.mask = torch.tril(torch.ones(n_timesteps,n_timesteps,device=device))
+        self.att_dropout = Dropout(dropout_prob)
+        self.residual_dropout = Dropout(dropout_prob)
+        self.softmax = Softmax()
 
-        self.in_size = in_size
-        self.fcc1 = TemporalDense(in_size, in_size * 4, device=device)
-        self.relu = ReLU()
-        self.fcc2 = TemporalDense(in_size * 4, out_size, device=device)
-
+        self.H = in_size // n_heads # head_size
+        assert in_size % n_heads==0, "embedding dimension not divisible in equal heads."
 
     def initialize_optimizer(self, lr, reg):
         self.config = {
-                       'learning_rate': lr,
+            'learning_rate': lr,
+        }
+        self.Wk.initialize_optimizer(lr, reg)
+        self.Wq.initialize_optimizer(lr, reg)
+        self.Wv.initialize_optimizer(lr, reg)
+        self.residual_proj.initialize_optimizer(lr, reg)
+
+    def forward(self, x):
+        # My implementation:
+            # # (B, num_heads, T, H) @ (B, num_heads, H, T) -> (B, num_heads, T, T)
+            # att_activation = torch.einsum('bnTh, bnht -> bnTt',q, k.transpose(-2,-1)) 
+
+            # # Every row (0:T) in att[B, num_heads] keeps only first (T+1) words.
+            # att = att_activation.masked_fill(self.mask[:T,:T] == 0, float('-inf'))
+
+            # # Every row (0:T) in att[B, num_heads] becomes probability distribution of first (T+1) words.
+            # att = att/(H)**(0.5)
+            # logits = torch.exp(att - torch.max(att, axis=-1, keepdims=True)[0])
+            # logits = logits / torch.sum(logits, axis= -1, keepdims=True) 
+
+            # # (B, num_heads, T, T) @ (B, num_heads, T, H) -> (B, num_heads, T, H)
+            # out = torch.einsum('bnTt, bnth -> bnTh', logits, v)
+
+            # out = out.transpose(1,2) # (B, num_heads, T, H) -> (B, T, num_heads, H)
+            # out = out.reshape(B,T,D) # (B, T, num_heads, H) -> (B,T,D)
+
+        B, T, D = x.shape
+        H = self.H
+        nh = D//H
+
+        k = self.Wk(x) # (B, T, D) @ (D, D) -> (B, T, D)
+        q = self.Wq(x) # (B, T, D) @ (D, D) -> (B, T, D)
+        v = self.Wv(x) # (B, T, D) @ (D, D) -> (B, T, D)
+
+        k = k.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
+        q = q.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
+        v = v.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
+
+        att = (q @ k.transpose(-2, -1)) # (B, nh, T, H) @ (B, nh, H, T) -> (B, nh, T, T)
+
+        # Reduces module sizes going into softmax:
+        att = att / H**(.5)
+        att = att.masked_fill(self.mask[:T,:T] == 0, float('-inf'))
+        att = self.softmax(att, dim=-1)
+        att = self.att_dropout(att)
+
+        out = att @ v # (B, nh, T, T) @ (B, nh, T, H) -> (B, nh, T, H)
+        
+        # Restack heads in D dimension:
+        out = out.transpose(1, 2).contiguous().view(B, T, D) # (B, nh, T, H) -> (B, T, D)
+
+        out = self.residual_proj(out) # (B, T, D) @ (D, D) -> (B, T, D)
+        out = self.residual_dropout(out)
+
+        self.cache = (att, k, v, q)
+
+        return out
+
+    def backward(self, dout):
+        B, T, D = dout.shape
+        H = self.H
+        num_heads = D // H
+
+        att, k, v, q = self.cache
+
+        # Backprop through projection layer:
+        dout = self.residual_dropout.backward(dout)
+        dout = self.residual_proj.backward(dout)
+
+        dout = dout.reshape(B, T, num_heads, H).transpose(1,2) # (B, T, D) -> (B, nh, T, H)
+
+        # Backprop through weighted sum of values:
+        datt = dout @ v.transpose(-2,-1) # (B, nh, T, H) @ (B, nh, T, H).T -> (B, nh, T, T)
+        dv = att.transpose(-2,-1) @ dout # (B, nh, T, T).T @ (B, nh, T, H) -> (B, nh, T, H)
+
+        # Backprop through softmax:
+        datt = self.softmax.backward(datt)
+        datt = datt / H**(.5)
+
+        # Backprop through attention activations:
+        dq = datt @ k # (B, nh, T, T) @ (B, nh, T, H).T.T -> (B, nh, T, H)
+        dk = datt.transpose(-2,-1) @ q # (B, nh, T, T).T @ (B, nh, T, H) -> (B, nh, T, H)
+
+        # Stack keys, queries, and values:
+        dk = dk.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
+        dq = dq.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
+        dv = dv.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
+
+
+        # Backprop through initial activation:
+        dx = self.Wk.backward(dk)
+        dx += self.Wq.backward(dq)    
+        dx += self.Wv.backward(dv)
+
+        return dx
+
+    def optimize(self):
+        self.Wk.optimize()
+        self.Wq.optimize()
+        self.Wv.optimize()
+        self.residual_proj.optimize()
+
+    def load_params(self, params_dict):
+        self.Wk.load_params(params_dict['Wk'])
+        self.Wq.load_params(params_dict['Wq'])
+        self.Wv.load_params(params_dict['Wv'])       
+        self.residual_proj.load_params(params_dict['residual_proj'])
+        self.att_dropout.load_params(params_dict['att_dropout'])
+        self.residual_dropout.load_params(params_dict['residual_dropout'])
+        self.mask = torch.tensor(params_dict['mask'], device=self.device)
+
+
+    def save_params(self):
+        return {
+            'Wk': self.Wk.save_params(),
+            'Wq': self.Wq.save_params(),
+            'Wv': self.Wv.save_params(),
+            'residual_proj': self.residual_proj.save_params(),
+            'att_dropout': self.att_dropout.save_params(),
+            'residual_dropout': self.residual_dropout.save_params(),
+            'mask': self.mask.tolist(),
+            'type': torch.tensor([8]).tolist()
+            }
+    
+    def decay_lr(self):
+        self.Wk.decay_lr()
+        self.Wq.decay_lr()
+        self.Wv.decay_lr()
+        self.residual_proj.decay_lr()
+        
+
+    def set_mode(self, mode: str) -> None:
+        '''Choose mode between "train" and "test" for the dropout layers'''
+        self.att_dropout.set_mode(mode)
+        self.residual_dropout.set_mode(mode)
+
+
+
+class FullyConnected(Layer):
+    def __init__(self, in_size, out_size, dropout_prob=0, device = 'cpu'):
+        super().__init__()
+        self.device = device
+        self.params = {
+            'type': torch.tensor([7])
+        }
+        self.in_size = in_size
+
+        self.fcc1 = TemporalDense(in_size, in_size * 4, device=device)
+        self.relu = ReLU()
+        self.fcc2 = TemporalDense(in_size * 4, out_size, device=device)
+        self.dropout = Dropout(dropout_prob)
+
+    def initialize_optimizer(self, lr, reg):
+        self.config = {
+            'learning_rate': lr,
         }
         self.fcc1.initialize_optimizer(lr, reg)
-        self.relu.initialize_optimizer(lr, reg)
         self.fcc2.initialize_optimizer(lr, reg)
 
     def forward(self, x):
-        z = self.fcc1.forward(x)
-        z = self.relu.forward(z)
-        z = self.fcc2.forward(z)
+        z = self.fcc1(x)
+        z = self.relu(z)
+        z = self.fcc2(z)
+        z = self.dropout(z)
         return z
 
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
-        return self.forward(args, kwds)
-
     def backward(self, dz):
-        dx = self.fcc2.backward(dz)
+        dx = self.dropout.backward(dz)
+        dx = self.fcc2.backward(dx)
         dx = self.relu.backward(dx)
         dx = self.fcc1.backward(dx)
         return dx
 
     def optimize(self):
         self.fcc1.optimize()
-        self.relu.optimize()
         self.fcc2.optimize()
 
     def load_params(self, params_dict):
         self.fcc1.load_params(params_dict['fcc1'])
-        self.relu.optimize(params_dict['relu'])
-        self.fcc2.optimize(params_dict['fcc2'])
+        self.relu.load_params(params_dict['relu'])
+        self.fcc2.load_params(params_dict['fcc2'])
+        self.dropout.load_params(params_dict['dropout'])
 
     def save_params(self):
         return {
             'fcc1': self.fcc1.save_params(),
             'relu': self.relu.save_params(),
             'fcc2': self.fcc2.save_params(),
-            'type': torch.tensor([2,1]).tolist()
+            'dropout': self.dropout.save_params(),
+            'type': torch.tensor([7]).tolist()
             }
     
     def decay_lr(self):
         self.fcc1.decay_lr()
         self.fcc2.decay_lr()
+        
+    def set_mode(self, mode):
+        '''Choose mode between "train" and "test" for the dropout layer'''
+        self.dropout.set_mode(mode)
 
 
 
 class Block(Layer):
-    def __init__(self, D, n_heads, n_timesteps, logger):
+    def __init__(self, in_size, out_size, n_heads, n_timesteps, dropout_prob=0, device = 'cpu'):
         super().__init__()
         self.params = {
-            'type': torch.tensor([8,9,8,1]).tolist()
+            'type': torch.tensor([9]).tolist()
         }
-        self.att = MultiHeadSelfAttention(D, n_heads, n_timesteps, logger)
-        self.ln1 = LayerNorm(D)
-        self.fcc = FullyConnected(D, D)
-        self.ln2 = LayerNorm(D)
-        self.logger = logger
+        self.att = MultiHeadSelfAttention(in_size, in_size, n_heads, n_timesteps, dropout_prob, device=device)
+        self.ln1 = LayerNorm(in_size, device=device)
+        self.fcc = FullyConnected(in_size, out_size, dropout_prob, device=device)
+        self.ln2 = LayerNorm(out_size, device=device)
+
+    def initialize_optimizer(self, lr, reg):
+        self.ln1.initialize_optimizer(lr, reg)
+        self.ln2.initialize_optimizer(lr, reg)
+        self.att.initialize_optimizer(lr, reg)
+        self.fcc.initialize_optimizer(lr, reg)
 
     def forward(self,x):
         x = x + self.att(self.ln1(x))
@@ -409,17 +598,17 @@ class Block(Layer):
 
     def load_params(self, params_dict):
         self.ln1.load_params(params_dict['ln1'])
-        self.ln2.optimize(params_dict['ln2'])
-        self.att.optimize(params_dict['att'])
-        self.fcc.optimize(params_dict['fcc'])
+        self.ln2.load_params(params_dict['ln2'])
+        self.att.load_params(params_dict['att'])
+        self.fcc.load_params(params_dict['fcc'])
 
     def save_params(self):
         return {
-            'fcc1': self.ln1.save_params(),
-            'relu': self.ln2.save_params(),
+            'ln1': self.ln1.save_params(),
+            'ln2': self.ln2.save_params(),
             'att': self.att.save_params(),
             'fcc': self.fcc.save_params(),
-            'type': torch.tensor([8,9,8,1]).tolist()
+            'type': torch.tensor([9]).tolist()
             }
     
     def decay_lr(self):
@@ -428,19 +617,22 @@ class Block(Layer):
         self.att.decay_lr()
         self.fcc.decay_lr()
 
+    def set_mode(self, mode: str) -> None:
+        '''Choose mode between "train" and "test" and pass it on to MultiHeadSelfAttention and FeedForward'''
+        self.att.set_mode(mode)
+        self.fcc.set_mode(mode)
 
 
 
-
-
-class RNN:
+class RNN(Layer):
     def __init__(self, in_size, hidden_size, device = 'cpu'):
+        super().__init__()
         self.device = device
         self.params = {
             'Wxh': torch.randn(in_size, hidden_size) / np.sqrt(in_size),
             'Whh': torch.randn(hidden_size, hidden_size) / np.sqrt(hidden_size),
             'bh': torch.zeros(hidden_size),
-            'type': torch.tensor([2])
+            'type': torch.tensor([3])
         }
 
         self.params = {key: param.to(device) for key, param in self.params.items()} 

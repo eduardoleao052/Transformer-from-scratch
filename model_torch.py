@@ -1,7 +1,7 @@
 ﻿from layers_torch import *
 import torch, torch.cuda
 import numpy as np
-from utils import build_logger
+from utils import build_logger, _get_class
 import json
 
 class Model:
@@ -88,6 +88,10 @@ class Model:
         self.char_to_ix = param_list.pop()
         self.ix_to_char = {i:ch for ch, i in self.char_to_ix.items()}
         for i, param_dict in enumerate(param_list):
+            if param_dict['type'] == [-1]:
+                layer = PositionalEmbedding(0, 0, device=self.device)
+                layer.load_params(param_dict)
+                self.layers.append(layer)
             if param_dict['type'] == [0]:
                 layer = Embedding(0, 0, device=self.device)
                 layer.load_params(param_dict)
@@ -105,14 +109,45 @@ class Model:
                 layer.load_params(param_dict)
                 self.layers.append(layer)
             elif param_dict['type'] == [4]:
-                layer = TemporalSoftmax(device=self.device)
+                layer = CrossEntropyLoss(device=self.device)
                 self.layers.append(layer)
-            elif param_dict['type'] == [1,7,1]:
+            elif param_dict['type'] == [5]:
+                layer = ReLU()
+                self.layers.append(layer)
+            elif param_dict['type'] == [6]:
+                layer = LayerNorm(0,device=self.device)
+                layer.load_params(param_dict)
+                self.layers.append(layer)
+            elif param_dict['type'] == [7]:
                 layer = FullyConnected(0, 0, device=self.device)
                 layer.load_params(param_dict)
                 self.layers.append(layer)
+            elif param_dict['type'] == [8]:
+                layer = MultiHeadSelfAttention(0, 0, 1, 1, dropout_prob=self.config['dropout_prob'], device=self.device)
+                layer.load_params(param_dict)
+                self.layers.append(layer)
+            elif param_dict['type'] == [9]:
+                layer = Block(0, 0, 1, 1, dropout_prob=self.config['dropout_prob'], device=self.device)
+                layer.load_params(param_dict)
+                self.layers.append(layer)
+            elif param_dict['type'] == [10]:
+                layer = Softmax()
+                self.layers.append(layer)
+            elif param_dict['type'] == [11]:
+                layer = Dropout(self.config['dropout_prob'])
+                self.layers.append(layer)
         #get vocab size from the first dense layer in the loaded model
         self.vocab_size = self.layers[0].params['E'].shape[0]
+
+    def train_mode(self) -> None:
+        '''Sets all the layers of the model into training mode'''
+        for layer in self.layers:
+            layer.set_mode('train')
+    
+    def test_mode(self) -> None:
+        '''Sets all the layers of the model into testing mode'''
+        for layer in self.layers:
+            layer.set_mode('test')
 
     def sample(self, seed:str) -> list:
         """
@@ -125,6 +160,7 @@ class Model:
         """
         idx = torch.tensor([self.char_to_ix[ch] for ch in seed], dtype=torch.long, device=self.device)
         idx = idx.reshape(1,-1)
+        self.test_mode()
         for _ in range(self.config['n_timesteps']):
             idx_context = idx[:,-self.config['n_timesteps']:]
             a = idx_context.clone()
@@ -141,6 +177,7 @@ class Model:
         
         # Collect all tokens sampled:
         txt = ''.join(self.ix_to_char[ix.item()] for ix in idx[0,-self.config['n_timesteps']:])
+        self.train_mode()
         return txt
 
     def test(self, n_timesteps:int, batch_size:int) -> int:
@@ -148,7 +185,7 @@ class Model:
         Runs batched forward passes through the entire validation dataset (self.test_text)
         and computes the average of the test loss.
 
-        @param n_timesteps (int): number of timesteps each batch goes through
+        @param n_timesteps (int): should be number of timesteps each batch goes through 
         @param batch_size (int): number of elements (word or character) per batch
 
         @returns torch.mean(test_losses) (int): mean of all test losses computed in this test
@@ -156,6 +193,7 @@ class Model:
         test_pointer = 0
         test_losses = []
 
+        self.test_mode()
         n_test_iter = len(self.test_data) // (n_timesteps * batch_size)
         # go through entire validation set:
         for t in range(n_test_iter):
@@ -173,6 +211,7 @@ class Model:
 
             test_losses.append(loss.item())
             test_pointer += n_timesteps * batch_size # move data pointer
+        self.train_mode()
         return np.mean(test_losses)
 
     def _get_batch(self, data:list, n_timesteps:int, batch_size:int) -> tuple:
@@ -211,32 +250,28 @@ class Model:
         losses = [10e6]
         test_losses = [10e6]
 
+        self.train_mode()
         for layer in self.layers:
             layer.initialize_optimizer(learning_rate, regularization)
-            
+
         smooth_loss = -np.log(1.0/self.vocab_size)
         for t in range(n_iter):
+            self.logger.info(f'iter: {t}, loss: {smooth_loss}')
             print(f'iter: {t}, loss: {smooth_loss}')
             input_idxs, target_idxs = self._get_batch(self.train_data, n_timesteps, batch_size)
             
             a = input_idxs.clone()
 
             # forward pass:
-            self.logger.info('=======================')
             for layer in self.layers:
-                self.logger.info(f'{layer}, forward')
                 a = layer.forward(a)
-                self.logger.info(f'{layer}, forward')
 
             # softmax:
             dz, loss = self.layers[-1].backward(target_idxs,a)
             # backward pass
             self.layers.reverse()
-            self.logger.info('=================')
             for layer in self.layers[1:]:
-                self.logger.info(f'{layer}, backward')
                 dz = layer.backward(dz)
-                self.logger.info(f'{layer}, backward')
             
                 # update step
                 layer.optimize()

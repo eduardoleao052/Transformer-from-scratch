@@ -15,10 +15,19 @@ def test_model(config):
     model = Model(config['testing_params'], config['model_layers'], device=device)
 
     config = config['testing_params']
+    config['dropout_prob'] = 0
     model.load(config['--from_path'])
+    model.load_text(config['--testing_corpus'])
     print(config['--seed'] + model.sample(config['--seed']))
+    print(model.test(config['n_timesteps'],batch_size=16))
    
 def train_model(config):
+    """
+    Trains the given model based on the configuration file. 
+    Read about customizing the training on the README.md file.
+
+    @param config (dict): dictionary with all the configurations of the model.
+    """
     model = Model(config['training_params'], config['model_layers'], device=device)
     model.load_text(config['training_params']['--corpus'])
 
@@ -31,6 +40,12 @@ def train_model(config):
                         config['patience'])
 
 def fine_tune(config):
+    """
+    Fine-tunes the model cited on --from_path based on the configuration file. 
+    Read about customizing the training on the README.md file.
+
+    @param config (dict): dictionary with all the configurations of the model.
+    """
     model = Model(config['fine_tuning_params'], config['model_layers'], device=device)
 
     model.load(config['fine_tuning_params']['--from_path'])

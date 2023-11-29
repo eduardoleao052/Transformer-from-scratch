@@ -6,6 +6,7 @@ import torch
 import torch.cuda
 import importlib.util 
 import json
+import sys
 
 def softmax(z, training = False):
         z -= np.max(z,axis=0,keepdims=True)
@@ -16,6 +17,9 @@ def sigmoid(z, training = False):
         #z= np.max(z,axis=1,keepdims=True)
         a = 1/(1+torch.exp(-z))
         return a
+
+def _get_class(class_name):
+    return getattr(sys.modules[__name__], class_name)
 
 def _build_config_function(config_path: str):
         """"
@@ -36,28 +40,29 @@ def _build_config_function(config_path: str):
         cfg.build_config
         return cfg.build_config
 
-def _get_vocab_size(args, training_corpus_path, fine_tune_from_path, test_from_path) -> int:
+def _get_config_info(args, train, fine_tune, test) -> int:
         """"
         Gets vocabulary size of the model that will be built.
 
         @param args (dict): arguments from terminal (wether to train, test, or fine-tune)
-        @param training_corpus_path (str): path to training corpus
-        @param fine_tune_from_path (str): path to file where the model to be fine-tuned is
-        @param test_from_path (str): path to file where the model to be tested is
+        @param train (str): dictionary containing configuration for training
+        @param fine_tune (str): dictionary containing configuration for fine_tuning
+        @param test (str): dictionary containing configuration for testing
 
-        @returns vocab_size (dict): size of vocabulary (num of different words or characters),
+        @returns vocab_size (int): size of vocabulary (num of different words or characters),
         will be used as input and output sizes.
+        @returns n_iter (int): maximum sequence length the transformer can process (timestep dimention).
         """
         if args.train:
-                vocab_size = len(set((open(training_corpus_path,'r',encoding='utf8')).read()))
-
+                vocab_size = len(set((open(train['--corpus'],'r',encoding='utf8')).read()))
+                n_timesteps = train['n_timesteps']
         if args.fine_tune:
-                vocab_size = len(json.loads(open(fine_tune_from_path,'r').read()).pop())
-        
+                vocab_size = len(json.loads(open(fine_tune['--from_path'],'r').read()).pop())
+                n_timesteps = 1
         if args.test:
-                vocab_size = len(json.loads(open(test_from_path,'r').read()).pop())
-        
-        return vocab_size
+                vocab_size = len(json.loads(open(test['--from_path'],'r').read()).pop())
+                n_timesteps = 1
+        return vocab_size, n_timesteps
 
 def clean_vocab(x, word):
     if '\n' in word:
