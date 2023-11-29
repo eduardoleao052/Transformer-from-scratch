@@ -298,7 +298,7 @@ class Model:
                 
                 # generate text sample:
                 txt = self.sample('. ')
-                print(f"\nEvaluation {t//self.config['evaluation_interval']}/{n_iter//self.config['evaluation_interval']}:\n #=========#\n{txt}\n#=========#")
+                print(f"\nEvaluation {t//self.config['evaluation_interval']}/{n_iter//self.config['evaluation_interval']}:\n#=========#\n{txt}\n#=========#")
 
                 # calculate loss on the test set:
                 test_loss = self.test(n_timesteps, batch_size)
