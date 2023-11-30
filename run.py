@@ -82,17 +82,15 @@ def parse_arguments():
     return args
 
 
-# main body:
+# Run the script:
 PATH = os.getcwd()
 
+# Search for CUDA GPU:
 if torch.cuda.is_available():
     cuda_device = torch.device("cuda:0")
     device = cuda_device
     print ("Device: cuda")
     torch.cuda.set_device(device)
-# elif torch.backends.mps.is_available():
-#     device = torch.device('mps:0')
-#     print ("Device: mps")
 else:
     device = 'cpu'
     print ("CUDA device not found, using CPU")
