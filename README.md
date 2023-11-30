@@ -7,9 +7,9 @@
 ## 1. Project Structure
 - `src/` : Folder with python files. 
 
-  - `src/model.py`:  File with the `Model` class.
+   - `src/model.py`:  File with the `Model` class.
     
-  - `src/layers.py`: File containing every Transformer layer. Each is a class with a __.forward()__ and __.backward()__ method.
+   - `src/layers.py`: File containing every Transformer layer. Each is a class with a __.forward()__ and __.backward()__ method.
     
   - `src/layers_recurrent.py`: RNN and LSTM layers, that can be thrown in the mix with the Transformer to test creative Ensembles.
     
