@@ -6,16 +6,10 @@
 
 ## 1. Project Structure
 - `src/` : Folder with python files.
-  - A
-
-  - `src/model.py`:  File with the `Model` class.
-    
-  - `src/layers.py`: File containing every Transformer layer. Each is a class with a __.forward()__ and __.backward()__ method.
-    
-  - `src/layers_recurrent.py`: RNN and LSTM layers, that can be thrown in the mix with the Transformer to test creative Ensembles.
-    
-  - `src/utils.py` : File with helper functions and classes.
-
+  - `src/model.py`:  File with the `Model` class.
+  - `src/layers.py`: File containing every Transformer layer. Each is a class with a __.forward()__ and __.backward()__ method.
+  - `src/layers_recurrent.py`: RNN and LSTM layers, that can be thrown in the mix with the Transformer to test creative Ensembles.
+  - `src/utils.py` : File with helper functions and classes.
 - `data/` : Folder to store the text files. Currently holds `shakespeare.txt` (which is the default), and `jules_verne.txt`.
 
 - `models/` : Folder which stores the saved models. Further explaination in section 2.
