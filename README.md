@@ -41,14 +41,14 @@ pip install -r requirements.txt
 - You may chose among the following layers:
   - `Embedding` (first layer, turns input indexes into vectors)
   - `PositionalEmbedding` (second layer, adds position information to every timestep of the input)
-  - `TemporalDense` (simple fully-connected layer)
-  - `MultiHeadSelfAttention` (core of the transformer, calculates weighted sum of inputs)
-  - `Block` (full transformer block - connects MHSA and Dense layers with residuals and LayerNorm)
-  - `Dropout` (can be added after layers to apply dropout)
-  - `CrossEntropyLoss` (last layer, returns probabilities for next generated character)
+  - `TemporalDense` (simple fully-connected layer)
+  - `MultiHeadSelfAttention` (core of the transformer, calculates weighted sum of inputs)
+  - `Block` (full transformer block - connects MHSA and Dense layers with residuals and LayerNorm)
+  - `Dropout` (can be added after layers to apply dropout)
+  - `CrossEntropyLoss` (last layer, returns probabilities for next generated character)
 - Extra recurrent layers:
-  - `RNN` (Recurrent Neural Network layer)
-  - `LSTM` (Long Short Term Memory layer)
+  - `RNN` (Recurrent Neural Network layer)
+  - `LSTM` (Long Short Term Memory layer)
 - Note: the first layer must be a `Embedding` layer with input size equals `vocab_size`.
 - Note: the last layer must be a `CrossEntropyLoss` layer with the previous layer's output size equals `vocab_size`.
 - Note: `MHSA` and `Block` take in (input_size, output_size, number_of_heads, number_of_timesteps, dropout_probability). For an example, see current implementation on `config.py`.
@@ -56,18 +56,18 @@ pip install -r requirements.txt
 ### Pretraining
 - To pretrain a Transformer on language modeling (predicting next character), first go into `config.py` and chose the necessary arguments.
 - In the `training_params` dictionary, choose:
-  - `--corpus` (name of file in data directory with the text you want to train the model on) 
-  - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
+  - `--corpus` (name of file in data directory with the text you want to train the model on)
+  - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
 - And you can choose the hyperparameters (although the defaults work pretty well):
-  - `n_iter` (number of times the model will run a full sequence during training)
-  - `n_timesteps` (number of characters the model can accept as input at once)
-  - `batch_size` (number of parallel iterations the model will run)
-  - `learning_rate` (scalar regulating how quickly model parameters change. Should be smaller for fine-tuning)
-  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
-  - `dropout_prob`: (percentage of weights to be zeroed by dropout layer) <b>[OPTIONAL]</b>
-  - `patience` (after how many evaluations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
-  - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
-  - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
+  - `n_iter` (number of times the model will run a full sequence during training)
+  - `n_timesteps` (number of characters the model can accept as input at once)
+  - `batch_size` (number of parallel iterations the model will run)
+  - `learning_rate` (scalar regulating how quickly model parameters change. Should be smaller for fine-tuning)
+  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
+  - `dropout_prob`: (percentage of weights to be zeroed by dropout layer) <b>[OPTIONAL]</b>
+  - `patience` (after how many evaluations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
+  - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
+  - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
 - Under `model_layers`, you can choose whatever configuration works best. Usually, layers with more parameters require larger text files to avoid overfitting and repetitive outputs.
   
 - Finally, simply run on terminal:
@@ -81,19 +81,19 @@ python3 run.py --train --config=config.py
 ### Fine-tuning
 - To fine-tune a Transformer on a given text file, go to `config.py` and choose the arguments:
 - In the `fine_tuning_params` dictionary, choose:
-  - `--corpus` (name of file in data directory with the text you want to train the model on) 
-  - `--from_path` (.json file that contains pretrained model)
-  - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
+  - `--corpus` (name of file in data directory with the text you want to train the model on)
+  - `--from_path` (.json file that contains pretrained model)
+  - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
 - And you can choose the hyperparameters (although the defaults work pretty well):
-  - `n_iter` (number of times the model will run a full sequence during training)
-  - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
-  - `batch_size` (number of parallel iterations the model will run)
-  - `learning_rate` (scalar regulating how quickly model parameters change)
-  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
-  - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
-  - `dropout_prob`: (percentage of weights to be zeroed by dropout layer) <b>[OPTIONAL]</b>
-  - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
-  - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
+  - `n_iter` (number of times the model will run a full sequence during training)
+  - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
+  - `batch_size` (number of parallel iterations the model will run)
+  - `learning_rate` (scalar regulating how quickly model parameters change)
+  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
+  - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
+  - `dropout_prob`: (percentage of weights to be zeroed by dropout layer) <b>[OPTIONAL]</b>
+  - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
+  - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
 - `model_layers` will not be accessed during fine-tuning, as the layers of the pretrained model will be automatically loaded.
   
 - Finally, simply run on terminal:
