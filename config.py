@@ -15,11 +15,11 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     """
     
     training_params = {
-        '--corpus': f"{PATH}/data/shakespeare.txt", 
-        '--to_path': f"{PATH}/models/my_pretrained_model.json", 
+        '--corpus': f"{PATH}/data/jules_verne.txt", 
+        '--to_path': f"{PATH}/models/dummy_model.json", 
         "n_iter": 150000,
-        "n_timesteps": 196,
-        "batch_size": 16,
+        "n_timesteps": 256,
+        "batch_size": 32,
         "learning_rate": 2e-4,
         "regularization": 2e-4,
         "dropout_prob": 0.2,
@@ -32,20 +32,20 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
         '--corpus': f"{PATH}/data/shakespeare.txt", 
         '--to_path': f"{PATH}/models/my_model.json", 
         '--from_path': f"{PATH}/models/my_pretrained_model.json",
-        "n_iter": 20000,
+        "n_iter": 100000,
         "batch_size": 16,
-        "learning_rate": 2e-5,
+        "learning_rate": 5e-5,
         "regularization": 2e-4,
         "dropout_prob": 0.2,
-        "patience": 7,
+        "patience": 5,
         "evaluation_interval": 500,
         "evaluation_n_timesteps": 600
 
     }
     testing_params = {
         '--from_path': f"{PATH}/models/my_pretrained_model.json", 
-        '--testing_corpus': f"{PATH}/data/shakespeare.txt", 
-        'seed': "ROMEO",
+        '--testing_corpus': f"{PATH}/data/jules_verne.txt", 
+        'seed': "Nemo",
         'evaluation_n_timesteps': 600
     }
 
@@ -63,12 +63,15 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     # ]
 
     model_layers = [ 
-        Embedding(vocab_size, 256, device=device),
-        PositionalEmbedding(n_timesteps, 256, device=device),
-        Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(256, 256, 8, n_timesteps, dropout_prob=0, device=device),
-        LayerNorm(256, device=device),
-        TemporalDense(256, vocab_size, device=device),
+        Embedding(vocab_size, 376, device=device),
+        PositionalEmbedding(n_timesteps, 376, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0.2, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0.2, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0.2, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0.2, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0.2, device=device),
+        LayerNorm(376, device=device),
+        TemporalDense(376, vocab_size, device=device),
         CrossEntropyLoss(device=device)
     ]
     

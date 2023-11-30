@@ -268,6 +268,9 @@ class Model:
 
         self.train_mode()
         for layer in self.layers:
+            # ======================== #
+            layer.logger = self.logger
+            # ======================== #
             layer.initialize_optimizer(learning_rate, regularization)
 
         smooth_loss = -np.log(1.0/self.vocab_size)
@@ -277,7 +280,6 @@ class Model:
             input_idxs, target_idxs = self._get_batch(self.train_data, n_timesteps, batch_size)
             
             a = input_idxs.clone()
-
             # forward pass:
             for layer in self.layers:
                 a = layer.forward(a)
@@ -288,7 +290,6 @@ class Model:
             self.layers.reverse()
             for layer in self.layers[1:]:
                 dz = layer.backward(dz)
-            
                 # update step
                 layer.optimize()
             self.layers.reverse()

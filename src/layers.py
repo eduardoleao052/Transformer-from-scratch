@@ -2,6 +2,7 @@
 import torch, torch.cuda
 import numpy as np
 from src.utils import *
+import torch.nn.functional as F
 
 class Layer:
     def __init__(self) -> None:
@@ -194,8 +195,8 @@ class Softmax(Layer):
         self.device = device
 
     def forward(self, z, dim=-1):
-        z = torch.exp(z - z.max(axis=dim, keepdims=True)[0])
-        out = z / torch.sum(z, dim=dim, keepdims=True)
+        z = torch.exp(z - torch.max(z, dim=dim, keepdims=True)[0])
+        out = torch.div(z, torch.sum(z, dim=dim, keepdims=True))
         self.cache = (out, dim)
         return out
 
@@ -221,12 +222,13 @@ class Dropout(Layer):
     def forward(self,z):
         if self.mode == 'test':
             return z
-        self.mask = (torch.rand(*z.shape) > self.p)
+        self.mask = torch.rand(*z.shape, device=self.device) > self.p
         a = torch.where(self.mask, z, 0) 
-        a = a / (1 - self.p)
+        a = torch.div(a, (1 - self.p))
         return a
         
     def backward(self,da):
+        da = torch.div(da, (1 - self.p))
         dz = torch.where(self.mask, da, 0)
         return dz
 
@@ -354,7 +356,7 @@ class MultiHeadSelfAttention(Layer):
         self.Wq = TemporalDense(in_size, in_size, device=device)
         self.Wv = TemporalDense(in_size, in_size, device=device)
         self.residual_proj = TemporalDense(in_size, out_size, device=device)
-        self.mask = torch.tril(torch.ones(n_timesteps,n_timesteps,device=device))
+        self.mask = torch.tril(torch.ones(n_timesteps,n_timesteps,device=device).view(1,1,n_timesteps,n_timesteps))
         self.att_dropout = Dropout(dropout_prob, device=device)
         self.residual_dropout = Dropout(dropout_prob, device=device)
         self.softmax = Softmax(device=device)
@@ -371,6 +373,11 @@ class MultiHeadSelfAttention(Layer):
         self.Wq.initialize_optimizer(lr, reg)
         self.Wv.initialize_optimizer(lr, reg)
         self.residual_proj.initialize_optimizer(lr, reg)
+        # ======= #
+        self.att_dropout.logger = self.logger
+        self.residual_dropout.logger = self.logger
+        self.softmax.logger = self.logger
+        # ======= #
 
     def forward(self, x):
         B, T, D = x.shape
@@ -388,11 +395,10 @@ class MultiHeadSelfAttention(Layer):
         att = (q @ k.transpose(-2, -1)) # (B, nh, T, H) @ (B, nh, H, T) -> (B, nh, T, T)
 
         # Reduces module sizes going into softmax:
-        att = att / H**(.5)
-        att = att.masked_fill(self.mask[:T,:T] == 0, float('-inf'))
+        att = torch.div(att,  H**(.5))
+        att = att.masked_fill(self.mask[:,:,:T,:T] == 0, float('-inf'))
         att = self.softmax(att, dim=-1)
         att = self.att_dropout(att)
-
         out = att @ v # (B, nh, T, T) @ (B, nh, T, H) -> (B, nh, T, H)
         
         # Restack heads in D dimension:
@@ -400,9 +406,8 @@ class MultiHeadSelfAttention(Layer):
 
         out = self.residual_proj(out) # (B, T, D) @ (D, D) -> (B, T, D)
         out = self.residual_dropout(out)
-
+        
         self.cache = (att, k, v, q)
-
         return out
 
     def backward(self, dout):
@@ -424,6 +429,9 @@ class MultiHeadSelfAttention(Layer):
 
         # Backprop through softmax:
         datt = self.softmax.backward(datt)
+        # TEST: ============== #
+        datt = datt.masked_fill(self.mask[:,:,:T,:T] == 0, float(0))
+        # ==================== #
         datt = datt / H**(.5)
 
         # Backprop through attention activations:
@@ -458,7 +466,6 @@ class MultiHeadSelfAttention(Layer):
         self.residual_dropout.load_params(params_dict['residual_dropout'])
         self.mask = torch.tensor(params_dict['mask'], device=self.device)
         self.H = params_dict['head_size'][0]
-        print(self.H)
 
     def save_params(self):
         return {
@@ -507,6 +514,10 @@ class FullyConnected(Layer):
         }
         self.fcc1.initialize_optimizer(lr, reg)
         self.fcc2.initialize_optimizer(lr, reg)
+        # ========= #
+        self.dropout.logger = self.logger
+        # ========= #
+
 
     def forward(self, x):
         z = self.fcc1(x)
@@ -563,6 +574,12 @@ class Block(Layer):
         self.ln2 = LayerNorm(out_size, device=device)
 
     def initialize_optimizer(self, lr, reg):
+        # ================== #
+        self.ln1.logger = self.logger
+        self.ln2.logger = self.logger
+        self.att.logger = self.logger
+        self.fcc.logger = self.logger
+        # ================== #
         self.ln1.initialize_optimizer(lr, reg)
         self.ln2.initialize_optimizer(lr, reg)
         self.att.initialize_optimizer(lr, reg)
