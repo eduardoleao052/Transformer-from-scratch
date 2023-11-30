@@ -5,11 +5,11 @@
 - The transformer principles and good-practices are aligned with CS224n's assignment 3.
 
 ## 1. Project Structure
-- `src/` : Folder with python files. 
+- `src/` : Folder with python files.
 
-   - `src/model.py`:  File with the `Model` class.
+  - `src/model.py`:  File with the `Model` class.
     
-   - `src/layers.py`: File containing every Transformer layer. Each is a class with a __.forward()__ and __.backward()__ method.
+  - `src/layers.py`: File containing every Transformer layer. Each is a class with a __.forward()__ and __.backward()__ method.
     
   - `src/layers_recurrent.py`: RNN and LSTM layers, that can be thrown in the mix with the Transformer to test creative Ensembles.
     
@@ -44,7 +44,7 @@ pip install -r requirements.txt
 - To customize the model layers, go into `config.py` and edit the `model_layers` dictionary.
 - Each layer takes as arguments the input and output sizes.
 - You may chose among the following layers:
-  - `Embedding` (first layer, turns input indexes into vectors)
+  - `Embedding` (first layer, turns input indexes into vectors)
   - `PositionalEmbedding` (second layer, adds position information to every timestep of the input)
   - `TemporalDense` (simple fully-connected layer)
   - `MultiHeadSelfAttention` (core of the transformer, calculates weighted sum of inputs)
