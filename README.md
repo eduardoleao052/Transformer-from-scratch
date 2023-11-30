@@ -40,7 +40,7 @@ pip install -r requirements.txt
 - Each layer takes as arguments the input and output sizes.
 - You may chose among the following layers:
   - `Embedding` (first layer, turns input indexes into vectors)
-  - `PositionalEmbedding` (second layer, adds position information to every timestep of the input)
+  - `PositionalEmbedding` (second layer, adds position information to every timestep of the input)
   - `TemporalDense` (simple fully-connected layer)
   - `MultiHeadSelfAttention` (core of the transformer, calculates weighted sum of inputs)
   - `Block` (full transformer block - connects MHSA and Dense layers with residuals and LayerNorm)
