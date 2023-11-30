@@ -106,10 +106,10 @@ python3 run.py --fine_tune --config=config.py
 ### Testing
 - To test your Transformer, go to `config.py` and choose the arguments:
 - In the `testing_params` dictionary, choose:
-  - `--from_path`: (.json file that contains pretrained model)
-  - `--testing_corpus`: (optionally, add a text corpus to generate a loss metric)
-  - `seed`: (the start to the string your model generates, it has to "continue" it) <b>[OPTIONAL]</b>
-  - `evaluation_n_timesteps`: (how many characters will be generated, "sounding" like the source text) <b>[OPTIONAL]</b>
+  - `--from_path`: (.json file that contains pretrained model)
+  - `--testing_corpus`: (optionally, add a text corpus to generate a loss metric)
+  - `seed`: (the start to the string your model generates, it has to "continue" it) <b>[OPTIONAL]</b>
+  - `evaluation_n_timesteps`: (how many characters will be generated, "sounding" like the source text) <b>[OPTIONAL]</b>
 
 - Note: the testing script does not access any hyperparametes, because the model is already trained.
   
