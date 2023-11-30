@@ -6,6 +6,7 @@
 
 ## 1. Project Structure
 - `src/` : Folder with python files.
+  - A
 
   - `src/model.py`:  File with the `Model` class.
     
