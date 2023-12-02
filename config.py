@@ -16,13 +16,13 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     
     training_params = {
         '--corpus': f"{PATH}/data/jules_verne.txt", 
-        '--to_path': f"{PATH}/models/dummy_model.json", 
+        '--to_path': f"{PATH}/models/my_pretrained_model.json", 
         "n_iter": 150000,
         "n_timesteps": 256,
         "batch_size": 32,
         "learning_rate": 2e-4,
         "regularization": 2e-4,
-        "dropout_prob": 0.2,
+        "dropout_prob": 0,
         "patience": 5,
         "evaluation_interval": 500,
         "evaluation_n_timesteps": 500
@@ -65,11 +65,12 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     model_layers = [ 
         Embedding(vocab_size, 376, device=device),
         PositionalEmbedding(n_timesteps, 376, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0.2, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0.2, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0.2, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0.2, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0.2, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
         LayerNorm(376, device=device),
         TemporalDense(376, vocab_size, device=device),
         CrossEntropyLoss(device=device)
