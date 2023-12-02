@@ -6,26 +6,39 @@ import torch.nn.functional as F
 
 class Layer:
     def __init__(self) -> None:
+        '''Initializes the layer and its parameters'''
         pass
 
-    def initialize_optimizer(self, lr, reg):
+    def initialize_optimizer(self, lr: int, reg: int) -> None:
+        """
+        Creates the self.config dictionary, which contains the optimizer configuration, and the cumulative
+        attributes used by Adam (momentum and adagrad) for each learnable parameter.
+
+        @param lr (dict): the scalar controling the rate of weight updates.
+        @param reg (dict): the scalar controling the size of the weights through L2 regularization.
+        """        
         self.config = {
             'learning_rate': lr
         }
     
     def __call__(self, x):
+        '''Alias for forward pass'''
         return self.forward(x)
 
     def optimize(self):
+        '''Performs the weight update steps, using self.grads and self.config to update self.params'''
         pass
 
     def save_params(self):
+        '''Saves model parameters to a .json file in the path specified by the --to_path argument'''
         return {key: value.tolist() for key, value in self.params.items()}
     
     def load_params(self, params_dict):
+        '''Loads model parameters from .json file in the path specified by the --from_path argument'''
         self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
     
     def decay_lr(self):
+        '''Reduces the learning rate in this layer by 10%'''
         self.config['learning_rate'] *= 0.9
 
     def set_mode(self, mode: str) -> None:
@@ -123,6 +136,155 @@ class PositionalEmbedding(Layer):
     
     def optimize(self):
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
+
+
+
+class MultiHeadSelfAttention(Layer):
+    def __init__(self, in_size, out_size, n_heads, n_timesteps, dropout_prob=0, device='cpu'):
+        super().__init__()
+        self.params = {
+            'head_size': torch.tensor([in_size // n_heads]),
+            'type': torch.tensor([8])
+        }
+        self.Wk = TemporalDense(in_size, in_size, device=device)
+        self.Wq = TemporalDense(in_size, in_size, device=device)
+        self.Wv = TemporalDense(in_size, in_size, device=device)
+        self.residual_proj = TemporalDense(in_size, out_size, device=device)
+        self.mask = torch.tril(torch.ones(n_timesteps,n_timesteps,device=device).view(1,1,n_timesteps,n_timesteps))
+        self.att_dropout = Dropout(dropout_prob, device=device)
+        self.residual_dropout = Dropout(dropout_prob, device=device)
+        self.softmax = Softmax(device=device)
+
+        self.device = device
+        self.H = in_size // n_heads # head_size
+        assert in_size % n_heads==0, "embedding dimension not divisible in equal heads."
+
+    def initialize_optimizer(self, lr, reg):
+        self.config = {
+            'learning_rate': lr,
+        }
+        self.Wk.initialize_optimizer(lr, reg)
+        self.Wq.initialize_optimizer(lr, reg)
+        self.Wv.initialize_optimizer(lr, reg)
+        self.residual_proj.initialize_optimizer(lr, reg)
+        # ======= #
+        self.att_dropout.logger = self.logger
+        self.residual_dropout.logger = self.logger
+        self.softmax.logger = self.logger
+        # ======= #
+
+    def forward(self, x):
+        B, T, D = x.shape
+        H = self.H
+        nh = D//H
+
+        k = self.Wk(x) # (B, T, D) @ (D, D) -> (B, T, D)
+        q = self.Wq(x) # (B, T, D) @ (D, D) -> (B, T, D)
+        v = self.Wv(x) # (B, T, D) @ (D, D) -> (B, T, D)
+
+        k = k.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
+        q = q.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
+        v = v.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
+
+        att = (q @ k.transpose(-2, -1)) # (B, nh, T, H) @ (B, nh, H, T) -> (B, nh, T, T)
+
+        # Reduces module sizes going into softmax:
+        att = torch.div(att,  H**(.5))
+        att = att.masked_fill(self.mask[:,:,:T,:T] == 0, float('-inf'))
+        att = self.softmax(att, dim=-1)
+        att = self.att_dropout(att)
+        out = att @ v # (B, nh, T, T) @ (B, nh, T, H) -> (B, nh, T, H)
+        
+        # Restack heads in D dimension:
+        out = out.transpose(1, 2).contiguous().view(B, T, D) # (B, nh, T, H) -> (B, T, D)
+
+        out = self.residual_proj(out) # (B, T, D) @ (D, D) -> (B, T, D)
+        out = self.residual_dropout(out)
+        
+        self.cache = (att, k, v, q)
+        return out
+
+    def backward(self, dout):
+        B, T, D = dout.shape
+        H = self.H
+        num_heads = D // H
+
+        att, k, v, q = self.cache
+
+        # Backprop through projection layer:
+        dout = self.residual_dropout.backward(dout)
+        dout = self.residual_proj.backward(dout)
+
+        dout = dout.reshape(B, T, num_heads, H).transpose(1,2) # (B, T, D) -> (B, nh, T, H)
+
+        # Backprop through weighted sum of values:
+        datt = dout @ v.transpose(-2,-1) # (B, nh, T, H) @ (B, nh, T, H).T -> (B, nh, T, T)
+        dv = att.transpose(-2,-1) @ dout # (B, nh, T, T).T @ (B, nh, T, H) -> (B, nh, T, H)
+
+        # Backprop through softmax:
+        datt = self.softmax.backward(datt)
+        # TEST: ============== #
+        datt = datt.masked_fill(self.mask[:,:,:T,:T] == 0, float(0))
+        # ==================== #
+        datt = datt / H**(.5)
+
+        # Backprop through attention activations:
+        dq = datt @ k # (B, nh, T, T) @ (B, nh, T, H).T.T -> (B, nh, T, H)
+        dk = datt.transpose(-2,-1) @ q # (B, nh, T, T).T @ (B, nh, T, H) -> (B, nh, T, H)
+
+        # Stack keys, queries, and values:
+        dk = dk.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
+        dq = dq.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
+        dv = dv.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
+
+
+        # Backprop through initial activation:
+        dx = self.Wk.backward(dk)
+        dx += self.Wq.backward(dq)    
+        dx += self.Wv.backward(dv)
+
+        return dx
+
+    def optimize(self):
+        self.Wk.optimize()
+        self.Wq.optimize()
+        self.Wv.optimize()
+        self.residual_proj.optimize()
+
+    def load_params(self, params_dict):
+        self.Wk.load_params(params_dict['Wk'])
+        self.Wq.load_params(params_dict['Wq'])
+        self.Wv.load_params(params_dict['Wv'])       
+        self.residual_proj.load_params(params_dict['residual_proj'])
+        self.att_dropout.load_params(params_dict['att_dropout'])
+        self.residual_dropout.load_params(params_dict['residual_dropout'])
+        self.mask = torch.tensor(params_dict['mask'], device=self.device)
+        self.H = params_dict['head_size'][0]
+
+    def save_params(self):
+        return {
+            'Wk': self.Wk.save_params(),
+            'Wq': self.Wq.save_params(),
+            'Wv': self.Wv.save_params(),
+            'residual_proj': self.residual_proj.save_params(),
+            'att_dropout': self.att_dropout.save_params(),
+            'residual_dropout': self.residual_dropout.save_params(),
+            'mask': self.mask.tolist(),
+            'type': torch.tensor([8]).tolist(),
+            'head_size': torch.tensor([self.H]).tolist()
+            }
+    
+    def decay_lr(self):
+        self.Wk.decay_lr()
+        self.Wq.decay_lr()
+        self.Wv.decay_lr()
+        self.residual_proj.decay_lr()
+        
+
+    def set_mode(self, mode: str) -> None:
+        '''Choose mode between "train" and "test" for the dropout layers'''
+        self.att_dropout.set_mode(mode)
+        self.residual_dropout.set_mode(mode)
 
 
 
@@ -342,155 +504,6 @@ class LayerNorm(Layer):
 
     def optimize(self):
         self.params, self.config = TorchAdam(self.params, self.grads, self.config)
-
-
-
-class MultiHeadSelfAttention(Layer):
-    def __init__(self, in_size, out_size, n_heads, n_timesteps, dropout_prob=0, device='cpu'):
-        super().__init__()
-        self.params = {
-            'head_size': torch.tensor([in_size // n_heads]),
-            'type': torch.tensor([8])
-        }
-        self.Wk = TemporalDense(in_size, in_size, device=device)
-        self.Wq = TemporalDense(in_size, in_size, device=device)
-        self.Wv = TemporalDense(in_size, in_size, device=device)
-        self.residual_proj = TemporalDense(in_size, out_size, device=device)
-        self.mask = torch.tril(torch.ones(n_timesteps,n_timesteps,device=device).view(1,1,n_timesteps,n_timesteps))
-        self.att_dropout = Dropout(dropout_prob, device=device)
-        self.residual_dropout = Dropout(dropout_prob, device=device)
-        self.softmax = Softmax(device=device)
-
-        self.device = device
-        self.H = in_size // n_heads # head_size
-        assert in_size % n_heads==0, "embedding dimension not divisible in equal heads."
-
-    def initialize_optimizer(self, lr, reg):
-        self.config = {
-            'learning_rate': lr,
-        }
-        self.Wk.initialize_optimizer(lr, reg)
-        self.Wq.initialize_optimizer(lr, reg)
-        self.Wv.initialize_optimizer(lr, reg)
-        self.residual_proj.initialize_optimizer(lr, reg)
-        # ======= #
-        self.att_dropout.logger = self.logger
-        self.residual_dropout.logger = self.logger
-        self.softmax.logger = self.logger
-        # ======= #
-
-    def forward(self, x):
-        B, T, D = x.shape
-        H = self.H
-        nh = D//H
-
-        k = self.Wk(x) # (B, T, D) @ (D, D) -> (B, T, D)
-        q = self.Wq(x) # (B, T, D) @ (D, D) -> (B, T, D)
-        v = self.Wv(x) # (B, T, D) @ (D, D) -> (B, T, D)
-
-        k = k.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
-        q = q.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
-        v = v.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
-
-        att = (q @ k.transpose(-2, -1)) # (B, nh, T, H) @ (B, nh, H, T) -> (B, nh, T, T)
-
-        # Reduces module sizes going into softmax:
-        att = torch.div(att,  H**(.5))
-        att = att.masked_fill(self.mask[:,:,:T,:T] == 0, float('-inf'))
-        att = self.softmax(att, dim=-1)
-        att = self.att_dropout(att)
-        out = att @ v # (B, nh, T, T) @ (B, nh, T, H) -> (B, nh, T, H)
-        
-        # Restack heads in D dimension:
-        out = out.transpose(1, 2).contiguous().view(B, T, D) # (B, nh, T, H) -> (B, T, D)
-
-        out = self.residual_proj(out) # (B, T, D) @ (D, D) -> (B, T, D)
-        out = self.residual_dropout(out)
-        
-        self.cache = (att, k, v, q)
-        return out
-
-    def backward(self, dout):
-        B, T, D = dout.shape
-        H = self.H
-        num_heads = D // H
-
-        att, k, v, q = self.cache
-
-        # Backprop through projection layer:
-        dout = self.residual_dropout.backward(dout)
-        dout = self.residual_proj.backward(dout)
-
-        dout = dout.reshape(B, T, num_heads, H).transpose(1,2) # (B, T, D) -> (B, nh, T, H)
-
-        # Backprop through weighted sum of values:
-        datt = dout @ v.transpose(-2,-1) # (B, nh, T, H) @ (B, nh, T, H).T -> (B, nh, T, T)
-        dv = att.transpose(-2,-1) @ dout # (B, nh, T, T).T @ (B, nh, T, H) -> (B, nh, T, H)
-
-        # Backprop through softmax:
-        datt = self.softmax.backward(datt)
-        # TEST: ============== #
-        datt = datt.masked_fill(self.mask[:,:,:T,:T] == 0, float(0))
-        # ==================== #
-        datt = datt / H**(.5)
-
-        # Backprop through attention activations:
-        dq = datt @ k # (B, nh, T, T) @ (B, nh, T, H).T.T -> (B, nh, T, H)
-        dk = datt.transpose(-2,-1) @ q # (B, nh, T, T).T @ (B, nh, T, H) -> (B, nh, T, H)
-
-        # Stack keys, queries, and values:
-        dk = dk.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
-        dq = dq.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
-        dv = dv.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
-
-
-        # Backprop through initial activation:
-        dx = self.Wk.backward(dk)
-        dx += self.Wq.backward(dq)    
-        dx += self.Wv.backward(dv)
-
-        return dx
-
-    def optimize(self):
-        self.Wk.optimize()
-        self.Wq.optimize()
-        self.Wv.optimize()
-        self.residual_proj.optimize()
-
-    def load_params(self, params_dict):
-        self.Wk.load_params(params_dict['Wk'])
-        self.Wq.load_params(params_dict['Wq'])
-        self.Wv.load_params(params_dict['Wv'])       
-        self.residual_proj.load_params(params_dict['residual_proj'])
-        self.att_dropout.load_params(params_dict['att_dropout'])
-        self.residual_dropout.load_params(params_dict['residual_dropout'])
-        self.mask = torch.tensor(params_dict['mask'], device=self.device)
-        self.H = params_dict['head_size'][0]
-
-    def save_params(self):
-        return {
-            'Wk': self.Wk.save_params(),
-            'Wq': self.Wq.save_params(),
-            'Wv': self.Wv.save_params(),
-            'residual_proj': self.residual_proj.save_params(),
-            'att_dropout': self.att_dropout.save_params(),
-            'residual_dropout': self.residual_dropout.save_params(),
-            'mask': self.mask.tolist(),
-            'type': torch.tensor([8]).tolist(),
-            'head_size': torch.tensor([self.H]).tolist()
-            }
-    
-    def decay_lr(self):
-        self.Wk.decay_lr()
-        self.Wq.decay_lr()
-        self.Wv.decay_lr()
-        self.residual_proj.decay_lr()
-        
-
-    def set_mode(self, mode: str) -> None:
-        '''Choose mode between "train" and "test" for the dropout layers'''
-        self.att_dropout.set_mode(mode)
-        self.residual_dropout.set_mode(mode)
 
 
 
