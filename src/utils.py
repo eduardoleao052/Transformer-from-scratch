@@ -53,17 +53,21 @@ def _get_config_info(args, train, fine_tune, test) -> int:
         @returns vocab_size (int): size of vocabulary (num of different words or characters),
         will be used as input and output sizes.
         @returns n_iter (int): maximum sequence length the transformer can process (timestep dimention).
+        @returns p (float): dropout probability in the chosen model layers.
         """
         if args.train:
                 vocab_size = len(set((open(train['--corpus'],'r',encoding='utf8')).read()))
                 n_timesteps = train['n_timesteps']
+                p = train['dropout_prob']
         if args.fine_tune:
                 vocab_size = len(json.loads(open(fine_tune['--from_path'],'r').read()).pop())
                 n_timesteps = 1
+                p = fine_tune['dropout_prob']
         if args.test:
                 vocab_size = len(json.loads(open(test['--from_path'],'r').read()).pop())
                 n_timesteps = 1
-        return vocab_size, n_timesteps
+                p = 0
+        return vocab_size, n_timesteps, p
 
 def clean_vocab(x, word):
     if '\n' in word:

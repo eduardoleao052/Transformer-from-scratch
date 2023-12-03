@@ -275,7 +275,6 @@ class Model:
 
         smooth_loss = -np.log(1.0/self.vocab_size)
         for t in range(n_iter):
-            self.logger.info(f'iter: {t}, loss: {smooth_loss}')
             print(f'iter: {t}, loss: {smooth_loss}')
             input_idxs, target_idxs = self._get_batch(self.train_data, n_timesteps, batch_size)
             

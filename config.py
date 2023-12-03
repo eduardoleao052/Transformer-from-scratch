@@ -16,16 +16,16 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     
     training_params = {
         '--corpus': f"{PATH}/data/scifi.txt", 
-        '--to_path': f"{PATH}/models/my_pretrained_model.json", 
+        '--to_path': f"{PATH}/models/my_scifi_model.json", 
         "character_level": True,
         "n_iter": 150000,
-        "n_timesteps": 256,
-        "batch_size": 32,
+        "n_timesteps": 376,
+        "batch_size": 16,
         "learning_rate": 2e-4,
         "regularization": 2e-4,
-        "dropout_prob": 0,
-        "patience": 5,
-        "evaluation_interval": 500,
+        "dropout_prob": 0.2,
+        "patience": 7,
+        "evaluation_interval": 750,
         "evaluation_n_timesteps": 500
 
     }
@@ -50,30 +50,22 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
         'evaluation_n_timesteps': 600
     }
 
-    #gets the vocabulary size (num of unique characters) that the model will accept as input.
-    vocab_size, n_timesteps = _get_config_info(args,training_params,fine_tuning_params,testing_params)
+    # Helper function that gets some parameters from the configuration dictionaries into the model_layers list:
+    vocab_size, n_timesteps, p = _get_config_info(args,training_params,fine_tuning_params,testing_params)
     
-    # model_layers = [ 
-    #     Embedding(vocab_size, 128, device = device),
-    #     RNN(128,128,device=device),
-    #     TemporalDense(128, 128, device = device),
-    #     #Dropout(drop_prob=0),
-    #     RNN(128,128,device=device),
-    #     TemporalDense(128, vocab_size, device = device),
-    #     CrossEntropyLoss(device = device)
-    # ]
-
     model_layers = [ 
-        Embedding(vocab_size, 376, device=device),
-        PositionalEmbedding(n_timesteps, 376, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
-        LayerNorm(376, device=device),
-        TemporalDense(376, vocab_size, device=device),
+        Embedding(vocab_size, 512, device=device),
+        PositionalEmbedding(n_timesteps, 512, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        LayerNorm(512, device=device),
+        TemporalDense(512, vocab_size, device=device),
         CrossEntropyLoss(device=device)
     ]
     
@@ -86,5 +78,3 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     }
 
     return MODEL_CONFIG
-
-
