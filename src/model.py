@@ -46,10 +46,10 @@ class Model:
 
         train_text = ''
         test_text = ''
-        text_phrases = text.split('\n')
+        text_phrases = text.split('.')
         p = (1 - val_size) * 100
-        for i in range(len(text_phrases)//100):
-            text_to_add = '\n'.join(text_phrases[i * 100: (i+1) * 100])
+        for i in range(len(text_phrases)//500):
+            text_to_add = '.'.join(text_phrases[i * 500: (i+1) * 500])
             if i % 100 < p:
                 train_text += text_to_add
             else:
@@ -158,6 +158,25 @@ class Model:
         for layer in self.layers:
             layer.set_mode('test')
 
+    def _get_batch(self, data:list, n_timesteps:int, batch_size:int) -> tuple:
+        """
+        Runs batched forward passes through the entire validation dataset (self.test_text)
+        and computes the average of the test loss.
+
+        @param text (str): entire corpus of text
+        @param n_timesteps (int): number of characters per sequence
+        @param batch_size (int): number of sequences per batch
+
+        @returns inputs_idxs (torch.tensor): vector of input indexes (shape N,T)
+        @returns target_idxs (torch.tensor): vector of target indexes (shape N,T)
+        """
+        B, T, V = batch_size, n_timesteps, self.vocab_size 
+        pointers = torch.randint(len(data) - T - 1, size=(B,))
+        input_idxs = torch.stack([data[p : p + T] for p in pointers])
+        target_idxs = torch.stack([data[p+1: p+1 + T] for p in pointers])
+
+        return input_idxs, target_idxs
+
     def sample(self, seed:str) -> list:
         """
         Generate text iteratively, sampling a new index for every [n_timesteps] previous indexes.
@@ -229,25 +248,6 @@ class Model:
             test_pointer += n_timesteps * batch_size # move data pointer
         self.train_mode()
         return np.mean(test_losses)
-
-    def _get_batch(self, data:list, n_timesteps:int, batch_size:int) -> tuple:
-        """
-        Runs batched forward passes through the entire validation dataset (self.test_text)
-        and computes the average of the test loss.
-
-        @param text (str): entire corpus of text
-        @param n_timesteps (int): number of characters per sequence
-        @param batch_size (int): number of sequences per batch
-
-        @returns inputs_idxs (torch.tensor): vector of input indexes (shape N,T)
-        @returns target_idxs (torch.tensor): vector of target indexes (shape N,T)
-        """
-        B, T, V = batch_size, n_timesteps, self.vocab_size 
-        pointers = torch.randint(len(data) - T, size=(B,))
-        input_idxs = torch.stack([data[p : p + T] for p in pointers])
-        target_idxs = torch.stack([data[p+1: p+1 + T] for p in pointers])
-
-        return input_idxs, target_idxs
     
     def train(self, n_iter: int, n_timesteps: int, batch_size: int,learning_rate=1e-3,regularization=1e-3,patience = 7) -> None: 
         """

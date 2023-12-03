@@ -15,8 +15,9 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     """
     
     training_params = {
-        '--corpus': f"{PATH}/data/jules_verne.txt", 
+        '--corpus': f"{PATH}/data/scifi.txt", 
         '--to_path': f"{PATH}/models/my_pretrained_model.json", 
+        "character_level": True,
         "n_iter": 150000,
         "n_timesteps": 256,
         "batch_size": 32,
