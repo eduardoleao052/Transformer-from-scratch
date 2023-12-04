@@ -24,7 +24,7 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
         "batch_size": 32,
         "learning_rate": 2e-4,
         "regularization": 2e-4,
-        "dropout_prob": 0,
+        "dropout_prob": 0.2,
         "patience": 5,
         "evaluation_interval": 500,
         "evaluation_n_timesteps": 500
@@ -54,16 +54,16 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     }
 
     # Gets the vocabulary size (num of unique characters) that the model will accept as input.
-    vocab_size, n_timesteps = _get_config_info(args,training_params,fine_tuning_params,testing_params)
+    vocab_size, n_timesteps, p = _get_config_info(args,training_params,fine_tuning_params,testing_params)
 
     # Edit HERE to build your own custom model:
     model_layers = [ 
         Embedding(vocab_size, 376, device=device),
         PositionalEmbedding(n_timesteps, 376, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=0, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
         LayerNorm(376, device=device),
         TemporalDense(376, vocab_size, device=device),
         CrossEntropyLoss(device=device)
