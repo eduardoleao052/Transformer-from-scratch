@@ -122,16 +122,20 @@ python3 run.py --test --config=config.py
 
 ## 3. Results
 - The transformer currently implemented in `config.py` achieved a loss of 1.01 with a vocabulary size of 80 characters.
-- This was achieved in 100,000 timesteps, which took 10h40min on a GTX1070 NVIDIA GPU.
+- I trained it on Jules Verne's complete works (~12M characters).
+- The training went on for 100,000 timesteps, which took 10h40min on a GTX1070 NVIDIA GPU.
+- This is a sample from the model:
+```
+Nemo led the frigate with large rocks, the prey which the present
+forest of waves marked. But they planted cries surrounded by waters
+of prayers and tunnels of the large ocean. Besides, they were going
+on to the shore.
+The lowest appliances, with peculiar results, hung patterns and
+frosts to the bottom, accompanied by the dominion of a strange sound,
+was everything that could not be left in this part of the Arctic Circle,
+and manufactured at the end of the Rio Norway Island.
+The western Norwegian crew was unaccustomed, and the heat of hunger had
+their best to remain again. The next danger of twelve miles was from the
+Andara, unable to cross the fierce diamond waves with the hollow.
+```
 - Note: Unlike recurrent layers, the Multi Head Self Attention forward and backward passes ran many times faster on the GPU than on my M2 CPU.
-- This is a sample from the model trained on Jules Verne's complete works.
-```
-Nemo led the frigate with large rocks, the prey which the present forest of waves marked. But they planted cries
-surrounded by waters of prayers and tunnels of the large ocean. Besides, they were going on to the shore.
-The lowest appliances, with peculiar results, hung patterns and frosts to the bottom, accompanied by the dominion
-of a strange sound, was everything that could not be left in this part of the Arctic Circle, and manufactured at
-the end of the Rio Norway Island.
-The western Norwegian crew was unaccustomed, and the heat of hunger had their best to remain again. The next danger
-of twelve miles was from the Andara, unable to cross the fierce diamond waves with the hollow.
-```
-
