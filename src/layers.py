@@ -73,6 +73,7 @@ class Embedding(Layer):
         }
 
     def forward(self, idx):
+        # Extracts embedding from row "idx":
         x = self.params['E'][idx]
         self.cache = (idx)
         return x
@@ -82,7 +83,7 @@ class Embedding(Layer):
         'dx': dx,
         'dE': torch.zeros_like(self.params['E'], device=self.device)
         }
-
+        # Adds gradients to "idx" row:
         idx = self.cache
         self.grads['dE'][idx] = dx
              
@@ -120,6 +121,7 @@ class PositionalEmbedding(Layer):
 
     def forward(self, x):
         B, T, D = x.shape
+        # Adds positional embeddings to input of size (batch_size,n_timesteps,embedding_dim):
         x += self.params['E'][:T,:]
         return x
 
@@ -167,37 +169,40 @@ class MultiHeadSelfAttention(Layer):
         self.Wq.initialize_optimizer(lr, reg)
         self.Wv.initialize_optimizer(lr, reg)
         self.residual_proj.initialize_optimizer(lr, reg)
-        # ======= #
-        self.att_dropout.logger = self.logger
-        self.residual_dropout.logger = self.logger
-        self.softmax.logger = self.logger
-        # ======= #
 
     def forward(self, x):
         B, T, D = x.shape
         H = self.H
         nh = D//H
 
+        # Get key, queries and values from the input:
         k = self.Wk(x) # (B, T, D) @ (D, D) -> (B, T, D)
         q = self.Wq(x) # (B, T, D) @ (D, D) -> (B, T, D)
         v = self.Wv(x) # (B, T, D) @ (D, D) -> (B, T, D)
 
+        # Reshape into different heads:
         k = k.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
         q = q.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
         v = v.reshape(B,T,nh,H).transpose(1,2) # (B, T, D) -> (B, T, nh, H) -> (B, nh, T, H)
 
+        # Compute attention activation:
         att = (q @ k.transpose(-2, -1)) # (B, nh, T, H) @ (B, nh, H, T) -> (B, nh, T, T)
 
-        # Reduces module sizes going into softmax:
+        # Reduce module before going into softmax:
         att = torch.div(att,  H**(.5))
+
+        # Apply mask (to block out future characters), softmax, and dropout:
         att = att.masked_fill(self.mask[:,:,:T,:T] == 0, float('-inf'))
         att = self.softmax(att, dim=-1)
         att = self.att_dropout(att)
+
+        # Compute weighted sum between values:
         out = att @ v # (B, nh, T, T) @ (B, nh, T, H) -> (B, nh, T, H)
         
         # Restack heads in D dimension:
         out = out.transpose(1, 2).contiguous().view(B, T, D) # (B, nh, T, H) -> (B, T, D)
 
+        # Apply final projection (Dense layer) and dropout:
         out = self.residual_proj(out) # (B, T, D) @ (D, D) -> (B, T, D)
         out = self.residual_dropout(out)
         
@@ -215,20 +220,20 @@ class MultiHeadSelfAttention(Layer):
         dout = self.residual_dropout.backward(dout)
         dout = self.residual_proj.backward(dout)
 
+        # Unstack heads:
         dout = dout.reshape(B, T, num_heads, H).transpose(1,2) # (B, T, D) -> (B, nh, T, H)
 
         # Backprop through weighted sum of values:
         datt = dout @ v.transpose(-2,-1) # (B, nh, T, H) @ (B, nh, T, H).T -> (B, nh, T, T)
         dv = att.transpose(-2,-1) @ dout # (B, nh, T, T).T @ (B, nh, T, H) -> (B, nh, T, H)
 
-        # Backprop through softmax:
+        # Backprop through dropout, softmax, and mask:
+        datt = self.att_dropout.backward(datt)
         datt = self.softmax.backward(datt)
-        # TEST: ============== #
         datt = datt.masked_fill(self.mask[:,:,:T,:T] == 0, float(0))
-        # ==================== #
         datt = datt / H**(.5)
 
-        # Backprop through attention activations:
+        # Backprop through attention activation:
         dq = datt @ k # (B, nh, T, T) @ (B, nh, T, H).T.T -> (B, nh, T, H)
         dk = datt.transpose(-2,-1) @ q # (B, nh, T, T).T @ (B, nh, T, H) -> (B, nh, T, H)
 
@@ -236,7 +241,6 @@ class MultiHeadSelfAttention(Layer):
         dk = dk.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
         dq = dq.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
         dv = dv.transpose(1,2).reshape(B, T, D) # (B, nh, T, H) -> (B, T, nh, H) -> (B, T, D)
-
 
         # Backprop through initial activation:
         dx = self.Wk.backward(dk)
@@ -527,9 +531,6 @@ class FullyConnected(Layer):
         }
         self.fcc1.initialize_optimizer(lr, reg)
         self.fcc2.initialize_optimizer(lr, reg)
-        # ========= #
-        self.dropout.logger = self.logger
-        # ========= #
 
 
     def forward(self, x):
@@ -587,12 +588,6 @@ class Block(Layer):
         self.ln2 = LayerNorm(out_size, device=device)
 
     def initialize_optimizer(self, lr, reg):
-        # ================== #
-        self.ln1.logger = self.logger
-        self.ln2.logger = self.logger
-        self.att.logger = self.logger
-        self.fcc.logger = self.logger
-        # ================== #
         self.ln1.initialize_optimizer(lr, reg)
         self.ln2.initialize_optimizer(lr, reg)
         self.att.initialize_optimizer(lr, reg)

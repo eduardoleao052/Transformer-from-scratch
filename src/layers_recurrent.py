@@ -6,26 +6,39 @@ from src.utils import *
 
 class Layer:
     def __init__(self) -> None:
+        '''Initializes the layer and its parameters'''
         pass
 
-    def initialize_optimizer(self, lr, reg):
+    def initialize_optimizer(self, lr: int, reg: int) -> None:
+        """
+        Creates the self.config dictionary, which contains the optimizer configuration, and the cumulative
+        attributes used by Adam (momentum and adagrad) for each learnable parameter.
+
+        @param lr (dict): the scalar controling the rate of weight updates.
+        @param reg (dict): the scalar controling the size of the weights through L2 regularization.
+        """        
         self.config = {
             'learning_rate': lr
         }
     
     def __call__(self, x):
+        '''Alias for forward pass'''
         return self.forward(x)
 
     def optimize(self):
+        '''Performs the weight update steps, using self.grads and self.config to update self.params'''
         pass
 
     def save_params(self):
+        '''Saves model parameters to a .json file in the path specified by the --to_path argument'''
         return {key: value.tolist() for key, value in self.params.items()}
     
     def load_params(self, params_dict):
+        '''Loads model parameters from .json file in the path specified by the --from_path argument'''
         self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
     
     def decay_lr(self):
+        '''Reduces the learning rate in this layer by 10%'''
         self.config['learning_rate'] *= 0.9
 
     def set_mode(self, mode: str) -> None:

@@ -81,8 +81,7 @@ def parse_arguments():
 
     return args
 
-
-# Run the script:
+# Get local PATH:
 PATH = os.getcwd()
 
 # Search for CUDA GPU:
@@ -95,6 +94,7 @@ else:
     device = 'cpu'
     print ("CUDA device not found, using CPU")
 
+# Parse terminal arguments:
 args = parse_arguments()
 
 if args.train:
