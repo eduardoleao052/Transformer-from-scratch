@@ -1,5 +1,4 @@
 ﻿'''Recurrent layers that can be added to the model: RNN and LSTM'''
-from typing import Any
 import torch, torch.cuda
 import numpy as np
 from src.utils import *

@@ -2,7 +2,6 @@
 import torch, torch.cuda
 import numpy as np
 from src.utils import *
-import torch.nn.functional as F
 
 class Layer:
     def __init__(self) -> None:
