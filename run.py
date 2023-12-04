@@ -16,7 +16,7 @@ def test_model(config):
     config = config['testing_params']
     config['dropout_prob'] = 0
     model.load(config['--from_path'])
-    model.load_text(config['--testing_corpus'])
+    model.load_text_characters(config['--testing_corpus'])
     print(config['seed'] + model.sample(config['seed']))
     print(model.test(config['n_timesteps'],batch_size=16))
    
@@ -28,8 +28,13 @@ def train_model(config):
     @param config (dict): dictionary with all the configurations of the model.
     """
     model = Model(config['training_params'], config['model_layers'], device=device)
-    model.load_text(config['training_params']['--corpus'])
-
+    
+    # Load text into model.train_data and model.test_data:
+    if config['training_params']['character_level'] == True:
+        model.load_text_characters(config['training_params']['--corpus'])
+    else:
+        model.load_text_words(config['training_params']['--corpus'])
+    
     config = config['training_params']
     model.train(config['n_iter'],
                         config['n_timesteps'],
@@ -49,8 +54,12 @@ def fine_tune(config):
 
     model.load(config['fine_tuning_params']['--from_path'])
 
-    model.load_text(config['fine_tuning_params']['--corpus'])
-    
+    # Load text into model.train_data and model.test_data:
+    if config['fine_tuning_params']['character_level'] == True:
+        model.load_text_characters(config['fine_tuning_params']['--corpus'])
+    else:
+        model.load_text_words(config['fine_tuning_params']['--corpus'])
+
     config = config['fine_tuning_params']
     model.train(config['n_iter'],
                         config['n_timesteps'],

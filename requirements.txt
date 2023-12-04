@@ -6,3 +6,4 @@ os
 importlib.util
 pathlib
 sys
+re

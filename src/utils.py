@@ -8,6 +8,7 @@ import torch.cuda
 import importlib.util 
 import json
 import sys
+import re
 
 def softmax(z, training = False):
         z -= np.max(z,axis=0,keepdims=True)
@@ -55,11 +56,21 @@ def _get_config_info(args, train, fine_tune, test) -> int:
         @returns p (float): probability of dropout (% of activations zeroed) in Transformer layers.
         """
         if args.train:
-                vocab_size = len(set((open(train['--corpus'],'r',encoding='utf8')).read()))
+                # Get vocab_size:
+                if train['character_level']==True:
+                    vocab_size = len(set((open(train['--corpus'],'r',encoding='utf8')).read()))
+                else: 
+                    vocab_size = len(set(re.findall(r"\w+|[^\w]+",(open(train['--corpus'],'r',encoding='utf8')).read())))
+                # Get n_timesteps and dropout_prob:
                 n_timesteps = train['n_timesteps']
                 p = train['dropout_prob']
         if args.fine_tune:
-                vocab_size = len(json.loads(open(fine_tune['--from_path'],'r').read()).pop())
+                # Get vocab_size:
+                if fine_tune['character_level']==True:
+                    vocab_size = len(set((open(fine_tune['--corpus'],'r',encoding='utf8')).read()))
+                else: 
+                    vocab_size = len(set(re.findall(r"\w+|[^\w]+",(open(fine_tune['--corpus'],'r',encoding='utf8')).read())))
+                # Get n_timesteps and dropout_prob:
                 n_timesteps = 1
                 p = fine_tune['dropout_prob']
         if args.test:

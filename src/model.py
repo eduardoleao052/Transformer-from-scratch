@@ -5,6 +5,7 @@ import torch, torch.cuda
 import numpy as np
 from src.utils import build_logger, _get_class
 import json
+import re
 
 class Model:
     def __init__(self, config: dict, layers: dict, device: str) -> None:
@@ -23,7 +24,7 @@ class Model:
         self.layers = layers
         self.vocab_size = self.layers[0].in_size 
         
-    def load_text(self, file: str, val_size = 0.05) -> None:
+    def load_text_characters(self, file: str, val_size = 0.05) -> None:
         """
         Loads the text file into self.train_text and self.test_text,
         dividing them randomly for every 100 phrases.
@@ -35,28 +36,68 @@ class Model:
 
         text = open(f'{file}', 'r',encoding='utf8').read() # should be simple plain text file
         chars = list(set(text))
-        data_size, vocab_size = len(text), len(chars)
+        data_size = len(text)
         print('Data has {} characters, {} unique.'.format(data_size, self.vocab_size))
-        #print(self.char_to_ix)
+
         if self.preloaded == False:
             self.char_to_ix = { ch:i for i,ch in enumerate(chars) }
             self.ix_to_char = { i:ch for i,ch in enumerate(chars) }
         else:
             text = ''.join([ch for ch in text if ch in self.char_to_ix.keys()])
-
+        
         train_text = ''
         test_text = ''
         text_phrases = text.split('.')
-        p = (1 - val_size) * 100
-        for i in range(len(text_phrases)//500):
-            text_to_add = '.'.join(text_phrases[i * 500: (i+1) * 500])
-            if i % 100 < p:
+        p = val_size * 100
+        for i in range(len(text_phrases)//100):
+            text_to_add = '.'.join(text_phrases[i * 100: (i+1) * 100])
+            if i % 100 >= p:
                 train_text += text_to_add
             else:
                 test_text += text_to_add
         
         self.train_data = torch.tensor([self.char_to_ix[ch] for  ch in train_text], device=self.device)
         self.test_data = torch.tensor([self.char_to_ix[ch] for  ch in test_text], device=self.device)
+
+        print(f"Loaded {file.split('/')[-1]}. Training data size: {len(self.train_data)} chars. Test data size: {len(self.test_data)} chars.")
+        self.logger.info(f"Loaded {file.split('/')[-1]}. Training data size: {len(self.train_data)} words. Test data size: {len(self.test_data)} words.")
+
+    def load_text_words(self, file: str, val_size = 0.05) -> None:
+        """
+        Loads the text file into self.train_text and self.test_text,
+        dividing them randomly for every 2500 words.
+
+        @param file (str): string containing the name of the file that has the text
+        @param val_size (int): percentage of text that will go to the validation set
+        """
+        self.logger.info("Loading word-level text inputs...")
+
+        text = open(f'{file}', 'r',encoding='utf8').read() # should be simple plain text file
+        tokens = re.findall(r"\w+|[^\w]", text)
+        unique = list(set(tokens))
+        data_size = len(tokens)
+        print('Data has {} words, {} unique.'.format(data_size, self.vocab_size))
+        if self.preloaded == False:
+            self.char_to_ix = { w:i for i,w in enumerate(unique) }
+            self.ix_to_char = { i:w for i,w in enumerate(unique) }
+        else:
+            tokens = [w for w in text if w in self.char_to_ix.keys()]
+        
+        train_words= []
+        test_words = []
+        p = val_size * 100
+        for i in range(len(tokens)//2500):
+            words_to_add = tokens[i * 2500: (i+1) * 2500]
+            if i % 100 >= p:
+                train_words += words_to_add
+            else:
+                test_words += words_to_add
+        
+        self.train_data = torch.tensor([self.char_to_ix[w] for  w in train_words], device=self.device)
+        self.test_data = torch.tensor([self.char_to_ix[w] for  w in test_words], device=self.device)
+
+        print(f"Loaded {file.split('/')[-1]}. Training data size: {len(self.train_data)} words. Test data size: {len(self.test_data)} words.")
+        self.logger.info(f"Loaded {file.split('/')[-1]}. Training data size: {len(self.train_data)} words. Test data size: {len(self.test_data)} words.")
 
     def save(self, path:str) -> None:
         """

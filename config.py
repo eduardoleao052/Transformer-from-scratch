@@ -17,9 +17,9 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     # Edit HERE if you want to train a model from scratch:
     training_params = {
         '--corpus': f"{PATH}/data/shakespeare.txt", 
-        '--to_path': f"{PATH}/models/my_pretrained_model.json", 
-        "character_level": True,
-        "n_iter": 150000,
+        '--to_path': f"{PATH}/models/shakespeare_model.json", 
+        "character_level": False,
+        "n_iter": 50000,
         "n_timesteps": 256,
         "batch_size": 32,
         "learning_rate": 2e-4,
@@ -33,8 +33,9 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     # Edit HERE if you want to fine_tune a pretrained model:
     fine_tuning_params = {
         '--corpus': f"{PATH}/data/shakespeare.txt", 
-        '--to_path': f"{PATH}/models/my_model.json", 
-        '--from_path': f"{PATH}/models/my_pretrained_model.json",
+        '--to_path': f"{PATH}/models/fine_tuned_model.json", 
+        '--from_path': f"{PATH}/models/shakespeare_model.json",
+        "character_level": True,
         "n_iter": 100000,
         "batch_size": 16,
         "learning_rate": 5e-5,
@@ -60,7 +61,6 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     model_layers = [ 
         Embedding(vocab_size, 376, device=device),
         PositionalEmbedding(n_timesteps, 376, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
         Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
         Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
         Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
