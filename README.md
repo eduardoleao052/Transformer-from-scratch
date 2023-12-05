@@ -1,11 +1,3 @@
-
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
-
 # Transformer From Scratch in Vanilla Python
 - Educational Transformer with forward and backprop. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it.
 - The full Transformer layers are in [layers.py](src/layers.py). Each has a __forward__ and __backprop__ methods.
