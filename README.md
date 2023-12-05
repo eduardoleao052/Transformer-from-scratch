@@ -29,8 +29,8 @@ pip install -r requirements.txt
 - To run, install the necessary requirements and a text corpus (any text you wish to replicate, .txt format).
 - Please download your text file in the data directory.
 
-<details>
-<summary>Build a Custom Model [Optional]</summary>
+### <details>
+### <summary>Build a Custom Model [Optional]</summary>
 I am indented
 </details>
 
