@@ -38,6 +38,10 @@ pip install -r requirements.txt
 - To customize the model layers, go into *[config.py](config.py)* and edit the `model_layers` dictionary.
 - Each layer takes as arguments the input and output sizes.
 - You may chose among the following layers:
+<details>
+<summary> You may chose among the following layers: </summary>
+
+- Transformer Layers:
   - `Embedding` (first layer, turns input indexes into vectors)
   - `PositionalEmbedding` (second layer, adds position information to every timestep of the input)
   - `TemporalDense` (simple fully-connected layer)
@@ -48,6 +52,9 @@ pip install -r requirements.txt
 - Extra recurrent layers:
   - `RNN` (Recurrent Neural Network layer)
   - `LSTM` (Long Short Term Memory layer)
+
+</details>
+
 - Note: the first layer must be a `Embedding` layer with input size equals `vocab_size`.
 - Note: the last layer must be a `CrossEntropyLoss` layer with the previous layer's output size equals `vocab_size`.
 - Note: `MHSA` and `Block` take in (input_size, output_size, number_of_heads, number_of_timesteps, dropout_probability). For an example, see current implementation on `config.py`.
