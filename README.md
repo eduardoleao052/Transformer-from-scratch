@@ -32,7 +32,6 @@ pip install -r requirements.txt
 - Please download your text file in the data directory.
 
 </details>
-
 <details>
 <summary> <h3> Build a Custom Model [Optional] </h3> </summary>
   
@@ -54,7 +53,6 @@ pip install -r requirements.txt
 - Note: `MHSA` and `Block` take in (input_size, output_size, number_of_heads, number_of_timesteps, dropout_probability). For an example, see current implementation on `config.py`.
 
 </details>
-
 <details>
 <summary> <h3> Pretraining </h3> </summary>
 
@@ -73,7 +71,6 @@ python3 run.py --train --config=config.py
 - Note: if you want to alter layers/dimensions, do so in the `config.py` file, as described in the __Build the Model__ section.
 
 </details>
-
 <details>
 <summary> <h3> Fine-Tuning </h3> </summary>
 
@@ -92,7 +89,6 @@ python3 run.py --fine_tune --config=config.py
 - Note: for fine-tuning, a you can get adventurous with smaller text files. I obtained good results with a ~10K character Bee Gees songs text file.
 
 </details>
-
 <details>
 <summary> <h3> Testing </h3> </summary>
 
