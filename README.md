@@ -30,7 +30,7 @@ pip install -r requirements.txt
 - Please download your text file in the data directory.
 
 <details>
-  <summary><b>Hi</b></summary>
+  <summary> <h style="font-size: 15;"> <b> Hi </b> </h> </summary>
 
 
 
