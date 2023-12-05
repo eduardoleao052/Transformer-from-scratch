@@ -41,17 +41,17 @@ pip install -r requirements.txt
   <details>
   <summary> You may chose among the following layers: </summary>
 
-- Transformer Layers:
-  - `Embedding` (first layer, turns input indexes into vectors)
-  - `PositionalEmbedding` (second layer, adds position information to every timestep of the input)
-  - `TemporalDense` (simple fully-connected layer)
-  - `MultiHeadSelfAttention` (core of the transformer, calculates weighted sum of inputs)
-  - `Block` (full transformer block - connects MHSA and Dense layers with residuals and LayerNorm)
-  - `Dropout` (can be added after layers to apply dropout)
-  - `CrossEntropyLoss` (last layer, returns probabilities for next generated character)
-- Extra recurrent layers:
-  - `RNN` (Recurrent Neural Network layer)
-  - `LSTM` (Long Short Term Memory layer)
+  - Transformer Layers:
+    - `Embedding` (first layer, turns input indexes into vectors)
+    - `PositionalEmbedding` (second layer, adds position information to every timestep of the input)
+    - `TemporalDense` (simple fully-connected layer)
+    - `MultiHeadSelfAttention` (core of the transformer, calculates weighted sum of inputs)
+    - `Block` (full transformer block - connects MHSA and Dense layers with residuals and LayerNorm)
+    - `Dropout` (can be added after layers to apply dropout)
+    - `CrossEntropyLoss` (last layer, returns probabilities for next generated character)
+  - Extra recurrent layers:
+    - `RNN` (Recurrent Neural Network layer)
+    - `LSTM` (Long Short Term Memory layer)
 
   </details>
 
