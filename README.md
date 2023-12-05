@@ -1,8 +1,7 @@
 # Transformer From Scratch in Vanilla Python
-- Use this repo to train and test your own Transformer. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it. Also, feel free to browse the classes in `layers.py`. They contain full and clear implementations of every layer in a Transformer, with clear __forward__ and __backprop__ methods.
-- This project started as a way to better understand the underlying principles of NLP. As I implemented these models, I tried to make the code as simple and well-documented as possible.
-- Much of this project's motivation came from Andrej Karpathy's GPT youtube videos, and the nanoGPT GitHub implementation. 
-- The transformer principles and good-practices are aligned with CS224n's assignment 3.
+- Educational Transformer with forward and backprop. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it.
+- The full Transformer layers are in *[layers.py](src/layers)*. Each has a __forward__ and __backprop__ methods.
+- This project was inspired by Andrej Karpathy's GPT youtube videos, and the nanoGPT GitHub implementation. 
 
 ## 1. Project Structure
 - `src/` : Folder with python files.
@@ -21,12 +20,7 @@
 ## 2. Running it Yourself
 ### Requirements
 - The required packages are listed in `recquirements.txt`.
-- The torch tensor makes computation is a little faster, and is it is used on the Transformer implementation. However, autograd is NOT used. All backpropagation is manually implemented.
-- To setup and join a miniconda virtual environment, run on terminal:
-```
-conda create -n environment_name python=3.8
-conda activate environment_name
-```
+- The torch tensors make computation a little faster, and so are is used on the Transformer implementation. However, autograd is NOT used. All backpropagation is manually implemented.
 - The requirements can be installed on a virtual environment with the command:
 ```
 pip install -r requirements.txt
@@ -36,7 +30,7 @@ pip install -r requirements.txt
 - Please download your text file in the data directory.
 
 ### Build the Model
-- To customize the model layers, go into `config.py` and edit the `model_layers` dictionary.
+- To customize the model layers, go into *[config.py](config)* and edit the `model_layers` dictionary.
 - Each layer takes as arguments the input and output sizes.
 - You may chose among the following layers:
   - `Embedding` (first layer, turns input indexes into vectors)
@@ -59,16 +53,6 @@ pip install -r requirements.txt
   - `--corpus` (name of file in data directory with the text you want to train the model on)
   - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
 - And you can choose the hyperparameters (although the defaults work pretty well):
-  - `n_iter` (number of times the model will run a full sequence during training)
-  - `n_timesteps` (number of characters the model can accept as input at once)
-  - `batch_size` (number of parallel iterations the model will run)
-  - `learning_rate` (scalar regulating how quickly model parameters change. Should be smaller for fine-tuning)
-  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
-  - `dropout_prob`: (percentage of weights to be zeroed by dropout layer) <b>[OPTIONAL]</b>
-  - `patience` (after how many evaluations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
-  - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
-  - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
-- Under `model_layers`, you can choose whatever configuration works best. Usually, layers with more parameters require larger text files to avoid overfitting and repetitive outputs.
   
 - Finally, simply run on terminal:
 ```
@@ -84,17 +68,7 @@ python3 run.py --train --config=config.py
   - `--corpus` (name of file in data directory with the text you want to train the model on)
   - `--from_path` (.json file that contains pretrained model)
   - `--to_path` (.json file that will be created to store the model) <b>[OPTIONAL]</b>
-- And you can choose the hyperparameters (although the defaults work pretty well):
-  - `n_iter` (number of times the model will run a full sequence during training)
-  - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
-  - `batch_size` (number of parallel iterations the model will run)
-  - `learning_rate` (scalar regulating how quickly model parameters change)
-  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
-  - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
-  - `dropout_prob`: (percentage of weights to be zeroed by dropout layer) <b>[OPTIONAL]</b>
-  - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
-  - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
-- `model_layers` will not be accessed during fine-tuning, as the layers of the pretrained model will be automatically loaded.
+- And you can choose the hyperparameters (although the defaults work pretty well).
   
 - Finally, simply run on terminal:
 ```
@@ -112,7 +86,6 @@ python3 run.py --fine_tune --config=config.py
   - `evaluation_n_timesteps`: (how many characters will be generated, "sounding" like the source text) <b>[OPTIONAL]</b>
 
 - Note: the testing script does not access any hyperparametes, because the model is already trained.
-  
 - `model_layers` will not be accessed during testing, as you will use the layers of the pretrained model.
 
 - Finally, simply run on terminal:
@@ -139,3 +112,28 @@ their best to remain again. The next danger of twelve miles was from the
 Andara, unable to cross the fierce diamond waves with the hollow.
 ```
 - Note: Unlike recurrent layers, the Multi Head Self Attention forward and backward passes ran many times faster on the GPU than on my M2 CPU.
+
+
+## 4. Appendix
+- Training hyperparameters:
+  - `n_iter` (number of times the model will run a full sequence during training)
+  - `n_timesteps` (number of characters the model can accept as input at once)
+  - `batch_size` (number of parallel iterations the model will run)
+  - `learning_rate` (scalar regulating how quickly model parameters change. Should be smaller for fine-tuning)
+  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
+  - `dropout_prob`: (percentage of weights to be zeroed by dropout layer) <b>[OPTIONAL]</b>
+  - `patience` (after how many evaluations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
+  - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
+  - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
+
+- Fine-tuning hyperparameters:
+  - `n_iter` (number of times the model will run a full sequence during training)
+  - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
+  - `batch_size` (number of parallel iterations the model will run)
+  - `learning_rate` (scalar regulating how quickly model parameters change)
+  - `regularization`: (scalar regulating size of weights and overfitting) <b>[OPTIONAL]</b>
+  - `patience` (after how many iterations  without improvement should the learning rate be reduced) <b>[OPTIONAL]</b>
+  - `dropout_prob`: (percentage of weights to be zeroed by dropout layer) <b>[OPTIONAL]</b>
+  - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
+  - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
+  - Note: `model_layers` will not be accessed during fine-tuning, as the layers of the pretrained model will be automatically loaded.
