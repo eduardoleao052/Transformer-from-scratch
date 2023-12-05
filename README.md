@@ -69,9 +69,9 @@ pip install -r requirements.txt
 ```
 python3 run.py --train --config=config.py
 ```
-- Whenever you feel like the samples are good enough, you can kill the training at any time. This will NOT corrupt the model saved .json file, and you may proceed to testing and fine_tuning on smaller datasets.
-- Note: for pretraining deep Transformers (many Blocks in series), a really large text corpus is necessary. I obtained reasonably good results with ~1M characters.
-- Note: if you want to alter layers/dimensions, do so in the `config.py` file, as described in the __Build the Model__ section.
+- You can kill the training at any time. This will NOT corrupt the saved models.
+- Note: for pretraining deep Transformers (many Blocks in series), a really large text corpus is necessary. I obtained reasonably good results with >1M characters.
+- Note: if you want to alter layers/dimensions, do so in the [config.py](config.py) file, as described in the __Build the Model__ section.
 
 </details>
 <details>
@@ -115,7 +115,7 @@ python3 run.py --test --config=config.py
 ## 3. Results
 - The transformer currently implemented in [config.py](config.py) achieved a __loss of 1.01__ with a vocabulary size of 80 characters.
 - I trained it on [Jules Verne's complete works](data/) (~13M characters).
-- The training went on for 100,000 timesteps, which took 10h40min on a GTX1070 NVIDIA GPU.
+- The training went on for __100,000 timesteps__, which took __10h40min__ on a GTX1070 NVIDIA GPU.
 - This is a sample from the model:
 ```
 Nemo led the frigate by large rocks, the prey which the present
