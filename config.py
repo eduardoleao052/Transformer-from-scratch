@@ -16,18 +16,18 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     
     # Edit HERE if you want to train a model from scratch:
     training_params = {
-        '--corpus': f"{PATH}/data/shakespeare.txt", 
-        '--to_path': f"{PATH}/models/shakespeare_model.json", 
+        '--corpus': f"{PATH}/data/jules_verne.txt", 
+        '--to_path': f"{PATH}/models/verne_w_model.json", 
         "character_level": False,
-        "n_iter": 50000,
-        "n_timesteps": 256,
-        "batch_size": 32,
+        "n_iter": 500000,
+        "n_timesteps": 196,
+        "batch_size": 16,
         "learning_rate": 2e-4,
         "regularization": 2e-4,
         "dropout_prob": 0.2,
-        "patience": 5,
-        "evaluation_interval": 500,
-        "evaluation_n_timesteps": 500
+        "patience": 7,
+        "evaluation_interval": 1000,
+        "evaluation_n_timesteps": 1000
 
     }
     # Edit HERE if you want to fine_tune a pretrained model:
@@ -48,10 +48,10 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     }
     # Edit HERE if you want to test a model (generate a sample):
     testing_params = {
-        '--from_path': f"{PATH}/models/my_pretrained_model.json", 
+        '--from_path': f"{PATH}/models/verne_w_model.json", 
         '--testing_corpus': f"{PATH}/data/jules_verne.txt", 
         'seed': "Nemo",
-        'evaluation_n_timesteps': 600
+        'evaluation_n_timesteps': 1000
     }
 
     # Gets the vocabulary size (num of unique characters) that the model will accept as input.
@@ -59,13 +59,18 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
 
     # Edit HERE to build your own custom model:
     model_layers = [ 
-        Embedding(vocab_size, 376, device=device),
-        PositionalEmbedding(n_timesteps, 376, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
-        Block(376, 376, 8, n_timesteps, dropout_prob=p, device=device),
-        LayerNorm(376, device=device),
-        TemporalDense(376, vocab_size, device=device),
+        Embedding(vocab_size, 512, device=device),
+        PositionalEmbedding(n_timesteps, 512, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        Block(512, 512, 8, n_timesteps, dropout_prob=p, device=device),
+        LayerNorm(512, device=device),
+        TemporalDense(512, vocab_size, device=device),
         CrossEntropyLoss(device=device)
     ]
     
