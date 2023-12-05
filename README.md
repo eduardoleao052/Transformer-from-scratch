@@ -134,7 +134,9 @@ Andara, unable to cross the fierce diamond waves with the hollow.
 
 
 ## 4. Appendix
-- Training hyperparameters:
+<details>
+<summary> Training hyperparameters: </summary>
+  
   - `n_iter` (number of times the model will run a full sequence during training)
   - `n_timesteps` (number of characters the model can accept as input at once)
   - `batch_size` (number of parallel iterations the model will run)
@@ -145,7 +147,10 @@ Andara, unable to cross the fierce diamond waves with the hollow.
   - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
   - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
 
-- Fine-tuning hyperparameters:
+</details>
+<details>
+<summary> Fine-tuning hyperparameters: </summary>
+  
   - `n_iter` (number of times the model will run a full sequence during training)
   - `n_timesteps` (number of characters the model will see/predict on each iteration in `n_iter`)
   - `batch_size` (number of parallel iterations the model will run)
@@ -156,3 +161,7 @@ Andara, unable to cross the fierce diamond waves with the hollow.
   - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
   - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
   - Note: `model_layers` will not be accessed during fine-tuning, as the layers of the pretrained model will be automatically loaded.
+
+
+</details>
+
