@@ -113,12 +113,12 @@ python3 run.py --test --config=config.py
 </details>
 
 ## 3. Results
-- The transformer currently implemented in `config.py` achieved a loss of 1.01 with a vocabulary size of 80 characters.
+- The transformer currently implemented in *[config.py](config.py)* achieved a __loss of 1.01__ with a vocabulary size of 80 characters.
 - I trained it on Jules Verne's complete works (~12M characters).
 - The training went on for 100,000 timesteps, which took 10h40min on a GTX1070 NVIDIA GPU.
 - This is a sample from the model:
 ```
-Nemo led the frigate with large rocks, the prey which the present
+Nemo led the frigate by large rocks, the prey which the present
 forest of waves marked. But they planted cries surrounded by waters
 of prayers and tunnels of the large ocean. Besides, they were going
 on to the shore.
