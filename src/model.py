@@ -1,4 +1,4 @@
-﻿'''Contains final Model class'''
+'''Contains final Model class'''
 from src.layers import *
 from src.layers_recurrent import *
 import torch, torch.cuda
@@ -24,7 +24,7 @@ class Model:
         self.layers = layers
         self.vocab_size = self.layers[0].in_size 
         
-    def load_text_characters(self, file: str, val_size = 0.05) -> None:
+    def load_text_characters(self, file: str, val_size = 0.01) -> None:
         """
         Loads the text file into self.train_text and self.test_text,
         dividing them randomly for every 100 phrases.
@@ -32,7 +32,7 @@ class Model:
         @param file (str): string containing the name of the file that has the text
         @param val_size (int): percentage of text that will go to the validation set
         """
-        self.logger.info("Loading text inputs...")
+        self.logger.info("Loading character-level input...")
 
         text = open(f'{file}', 'r',encoding='utf8').read() # should be simple plain text file
         chars = list(set(text))
@@ -49,8 +49,8 @@ class Model:
         test_text = ''
         text_phrases = text.split('.')
         p = val_size * 100
-        for i in range(len(text_phrases)//100):
-            text_to_add = '.'.join(text_phrases[i * 100: (i+1) * 100])
+        for i in range(len(text_phrases)//10000):
+            text_to_add = '.'.join(text_phrases[i * 10000: (i+1) * 10000])
             if i % 100 >= p:
                 train_text += text_to_add
             else:
@@ -60,7 +60,7 @@ class Model:
         self.test_data = torch.tensor([self.char_to_ix[ch] for  ch in test_text], device=self.device)
 
         print(f"Loaded {file.split('/')[-1]}. Training data size: {len(self.train_data)} chars. Test data size: {len(self.test_data)} chars.")
-        self.logger.info(f"Loaded {file.split('/')[-1]}. Training data size: {len(self.train_data)} words. Test data size: {len(self.test_data)} words.")
+        self.logger.info(f"Loaded {file.split('/')[-1]}. Training data size: {len(self.train_data)} chars. Test data size: {len(self.test_data)} chars.")
 
     def load_text_words(self, file: str, val_size = 0.05) -> None:
         """
@@ -71,12 +71,11 @@ class Model:
         @param val_size (int): percentage of text that will go to the validation set
         """
         self.logger.info("Loading word-level text inputs...")
-
         text = open(f'{file}', 'r',encoding='utf8').read() # should be simple plain text file
         tokens = re.findall(r"\w+|[^\w]", text)
         unique = list(set(tokens))
         data_size = len(tokens)
-        print('Data has {} words, {} unique.'.format(data_size, self.vocab_size))
+        print(f'Data has {data_size} words, {self.vocab_size} unique.')
         if self.preloaded == False:
             self.char_to_ix = { w:i for i,w in enumerate(unique) }
             self.ix_to_char = { i:w for i,w in enumerate(unique) }
@@ -98,6 +97,7 @@ class Model:
 
         print(f"Loaded {file.split('/')[-1]}. Training data size: {len(self.train_data)} words. Test data size: {len(self.test_data)} words.")
         self.logger.info(f"Loaded {file.split('/')[-1]}. Training data size: {len(self.train_data)} words. Test data size: {len(self.test_data)} words.")
+
 
     def save(self, path:str) -> None:
         """
@@ -250,7 +250,6 @@ class Model:
             # Sample next index with probability:
             idx_next = torch.multinomial(probs, num_samples=1)
             idx = torch.cat((idx,idx_next),dim=1)
-        
         # Collect all tokens sampled:
         txt = ''.join(self.ix_to_char[ix.item()] for ix in idx[0,-self.config['evaluation_n_timesteps']:])
         self.train_mode()
@@ -302,7 +301,7 @@ class Model:
         @param patience (int): number of iterations after each learning_rate decay (*0.9) until next can happen;
         learning_rate decay happens when a smooth_loss is larger than 
         """   
-        self.logger.info("Training")
+        self.logger.info(f"Training {self.config['--to_path'].split('/')[-1]}")
         pointer, decay_counter = 0, 0
         losses = [10e6]
         test_losses = [10e6]
@@ -365,3 +364,4 @@ class Model:
                 test_losses.append(test_loss)
             
         
+
