@@ -114,7 +114,7 @@ python3 run.py --test --config=config.py
 
 ## 3. Results
 - The transformer currently implemented in *[config.py](config.py)* achieved a __loss of 1.01__ with a vocabulary size of 80 characters.
-- I trained it on Jules Verne's complete works (~12M characters).
+- I trained it on *[Jules Verne's complete works](data/)* (~12M characters).
 - The training went on for 100,000 timesteps, which took 10h40min on a GTX1070 NVIDIA GPU.
 - This is a sample from the model:
 ```
