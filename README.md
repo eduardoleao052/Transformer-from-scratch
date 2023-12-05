@@ -30,7 +30,7 @@ pip install -r requirements.txt
 - Please download your text file in the data directory.
 
 <details>
-<summary> <b> <h3> Build a Custom Model </h3> </b> </summary>
+<summary> <h3> Build a Custom Model </h3> </summary>
   
 - To customize the model layers, go into *[config.py](config.py)* and edit the `model_layers` dictionary.
 - Each layer takes as arguments the input and output sizes.
