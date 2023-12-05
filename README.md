@@ -29,10 +29,10 @@ pip install -r requirements.txt
 - To run, install the necessary requirements and a text corpus (any text you wish to replicate, .txt format).
 - Please download your text file in the data directory.
 
-#<Ss>
+<details>
 ### <summary>Build a Custom Model [Optional]</summary>
 I am indented
-</Ss>
+</details>
 
 ### Build a Custom Model [Optional]
 - To customize the model layers, go into *[config.py](config.py)* and edit the `model_layers` dictionary.
