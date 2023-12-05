@@ -1,6 +1,6 @@
 # Transformer From Scratch in Vanilla Python
 - Educational Transformer with forward and backprop. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it.
-- The full Transformer layers are in *[layers.py](src/layers)*. Each has a __forward__ and __backprop__ methods.
+- The full Transformer layers are in *[layers.py](src/layers.py)*. Each has a __forward__ and __backprop__ methods.
 - This project was inspired by Andrej Karpathy's GPT youtube videos, and the nanoGPT GitHub implementation. 
 
 ## 1. Project Structure
@@ -30,7 +30,7 @@ pip install -r requirements.txt
 - Please download your text file in the data directory.
 
 ### Build the Model
-- To customize the model layers, go into *[config.py](config)* and edit the `model_layers` dictionary.
+- To customize the model layers, go into *[config.py](config.py)* and edit the `model_layers` dictionary.
 - Each layer takes as arguments the input and output sizes.
 - You may chose among the following layers:
   - `Embedding` (first layer, turns input indexes into vectors)
