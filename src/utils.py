@@ -60,7 +60,7 @@ def _get_config_info(args, train, fine_tune, test) -> int:
                 if train['character_level']==True:
                     vocab_size = len(set((open(train['--corpus'],'r',encoding='utf8')).read()))
                 else: 
-                    vocab_size = len(set(re.findall(r"\w+|[^\w]+",(open(train['--corpus'],'r',encoding='utf8')).read())))
+                    vocab_size = len(set(re.findall(r"\w+|[^\w]",(open(train['--corpus'],'r',encoding='utf8')).read())))
                 # Get n_timesteps and dropout_prob:
                 n_timesteps = train['n_timesteps']
                 p = train['dropout_prob']
