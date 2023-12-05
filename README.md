@@ -1,6 +1,6 @@
 # Transformer From Scratch in Vanilla Python
 - Educational Transformer with forward and backprop. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it.
-- The full Transformer layers are in *[layers.py](src/layers.py)*. Each has a __forward__ and __backprop__ methods.
+- The full Transformer layers are in [layers.py](src/layers.py). Each has a __forward__ and __backprop__ methods.
 - This project was inspired by Andrej Karpathy's GPT youtube videos, and the nanoGPT GitHub implementation. 
 
 ## 1. Project Structure
@@ -35,7 +35,7 @@ pip install -r requirements.txt
 <details>
 <summary> <h3> Build a Custom Model [Optional] </h3> </summary>
   
-- To customize the model layers, go into *[config.py](config.py)* and edit the `model_layers` dictionary.
+- To customize the model layers, go into [config.py](config.py) and edit the `model_layers` dictionary.
 - Each layer takes as arguments the input and output sizes.
 - Note: the first layer must be a `Embedding` layer with input size equals `vocab_size`.
 - Note: the last layer must be a `CrossEntropyLoss` layer with the previous layer's output size equals `vocab_size`.
@@ -113,8 +113,8 @@ python3 run.py --test --config=config.py
 </details>
 
 ## 3. Results
-- The transformer currently implemented in *[config.py](config.py)* achieved a __loss of 1.01__ with a vocabulary size of 80 characters.
-- I trained it on *[Jules Verne's complete works](data/)* (~12M characters).
+- The transformer currently implemented in [config.py](config.py) achieved a __loss of 1.01__ with a vocabulary size of 80 characters.
+- I trained it on [Jules Verne's complete works](data/) (~13M characters).
 - The training went on for 100,000 timesteps, which took 10h40min on a GTX1070 NVIDIA GPU.
 - This is a sample from the model:
 ```
