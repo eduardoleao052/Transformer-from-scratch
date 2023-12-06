@@ -36,9 +36,7 @@ pip install -r requirements.txt
 <summary> <h3> Build a Custom Model [Optional] </h3> </summary>
   
 - To customize the model layers, go into [config.py](config.py) and edit the `model_layers` dictionary.
-  > **Note:** Each layer takes as arguments the input and output sizes.
-  > <br> **Note:** The first layer must be a `Embedding` layer with input size equals `vocab_size`. </br>
-  > **Note:** The last layer must be a `CrossEntropyLoss` layer with the previous layer's output size equals `vocab_size`.
+  > **Note:** Each layer takes as arguments the input and output sizes. The first layer must be a `Embedding` layer with input size equals `vocab_size`. The last layer must be a `CrossEntropyLoss` layer with the previous layer's output size equals `vocab_size`.
   <details>
   <summary> You may chose among <b>the following layers</b>: </summary>
 
