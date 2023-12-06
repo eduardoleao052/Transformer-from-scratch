@@ -1,7 +1,7 @@
 # Transformer From Scratch in Vanilla Python
 - Educational Transformer with forward and backprop. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it.
 - The full Transformer layers are in [layers.py](src/layers.py). Each has a __forward__ and __backprop__ methods.
-- Multi-Head Self Attention layer has __just 160 lines of code__.
+- Multi-Head Self Attention layer has __just 150 lines of code__.
 
 ## 1. Project Structure
 - `src/` : Folder with python files.
