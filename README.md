@@ -40,7 +40,7 @@ pip install -r requirements.txt
   > <br> **Note:** The first layer must be a `Embedding` layer with input size equals `vocab_size`. </br>
   > **Note:** The last layer must be a `CrossEntropyLoss` layer with the previous layer's output size equals `vocab_size`.
   <details>
-  <summary> You may chose among the following layers: </summary>
+  <summary> You may chose among <b>the following layers</b>: </summary>
 
     - Transformer Layers:
       - `Embedding` (first layer, turns input indexes into vectors)
