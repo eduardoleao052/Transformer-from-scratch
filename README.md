@@ -33,28 +33,6 @@ pip install -r requirements.txt
 
 </details>
 <details>
-<summary> <h3> Build a Custom Model [Optional] </h3> </summary>
-  
-- To customize the model layers, go into [config.py](config.py) and edit the `model_layers` dictionary.
-  > **Note:** Each layer takes as arguments the input and output sizes. The first layer must be a `Embedding` layer with input size equals `vocab_size`. The last layer must be a `CrossEntropyLoss` layer with the previous layer's output size equals `vocab_size`.
-  <details>
-  <summary> You may chose among <b>the following layers</b>: </summary>
-
-    - Transformer Layers:
-      - `Embedding` (first layer, turns input indexes into vectors)
-      - `PositionalEmbedding` (second layer, adds position information to every timestep of the input)
-      - `TemporalDense` (simple fully-connected layer)
-      - `MultiHeadSelfAttention` (core of the transformer, calculates weighted sum of inputs)
-      - `Block` (full transformer block - connects MHSA and Dense layers with residuals and LayerNorm)
-      - `Dropout` (can be added after layers to apply dropout)
-      - `CrossEntropyLoss` (last layer, returns probabilities for next generated character)
-    - Extra recurrent layers:
-      - `RNN` (Recurrent Neural Network layer)
-      - `LSTM` (Long Short Term Memory layer)
-
-  </details>
-</details>
-<details>
 <summary> <h3> Pretraining </h3> </summary>
 
 - To pretrain a Transformer on language modeling (predicting next character), first go into `config.py` and chose the necessary arguments.
@@ -107,6 +85,28 @@ python3 run.py --test --config=config.py
 ```
 > **Note:** The testing script does not access any hyperparametes, because the model is already trained.
 
+</details>
+<details>
+<summary> <h3> Build a Custom Model [Optional] </h3> </summary>
+  
+- To customize the model layers, go into [config.py](config.py) and edit the `model_layers` dictionary.
+  > **Note:** Each layer takes as arguments the input and output sizes. The first layer must be a `Embedding` layer with input size equals `vocab_size`. The last layer must be a `CrossEntropyLoss` layer with the previous layer's output size equals `vocab_size`.
+  <details>
+  <summary> You may chose among <b>the following layers</b>: </summary>
+
+    - Transformer Layers:
+      - `Embedding` (first layer, turns input indexes into vectors)
+      - `PositionalEmbedding` (second layer, adds position information to every timestep of the input)
+      - `TemporalDense` (simple fully-connected layer)
+      - `MultiHeadSelfAttention` (core of the transformer, calculates weighted sum of inputs)
+      - `Block` (full transformer block - connects MHSA and Dense layers with residuals and LayerNorm)
+      - `Dropout` (can be added after layers to apply dropout)
+      - `CrossEntropyLoss` (last layer, returns probabilities for next generated character)
+    - Extra recurrent layers:
+      - `RNN` (Recurrent Neural Network layer)
+      - `LSTM` (Long Short Term Memory layer)
+
+  </details>
 </details>
 
 ## 3. Results
