@@ -70,8 +70,8 @@ pip install -r requirements.txt
 python3 run.py --train --config=config.py
 ```
 - You can kill the training at any time. This will NOT corrupt the saved models.
-- Note: for pretraining deep Transformers (many Blocks in series), a really large text corpus is necessary. I obtained reasonably good results with >1M characters.
-- Note: if you want to alter layers/dimensions, do so in the [config.py](config.py) file, as described in the __Build the Model__ section.
+> **Note:** for pretraining deep Transformers (many Blocks in series), a really large text corpus is necessary. I obtained reasonably good results with >1M characters.
+> **Note:** you want to alter layers/dimensions, do so in the [config.py](config.py) file, as described in the __Build the Model__ section.
 
 </details>
 <details>
@@ -89,7 +89,7 @@ python3 run.py --train --config=config.py
 python3 run.py --fine_tune --config=config.py
 ```
 
-- Note: for fine-tuning, a you can get adventurous with smaller text files. I obtained good results with a ~10K character Bee Gees songs text file.
+> **Note:** For fine-tuning, a you can get adventurous with smaller text files. I obtained good results with a ~10K character Bee Gees songs text file.
 
 </details>
 <details>
@@ -102,13 +102,13 @@ python3 run.py --fine_tune --config=config.py
   - `seed`: (the start to the string your model generates, it has to "continue" it) <b>[OPTIONAL]</b>
   - `evaluation_n_timesteps`: (how many characters will be generated, "sounding" like the source text) <b>[OPTIONAL]</b>
 
-- Note: the testing script does not access any hyperparametes, because the model is already trained.
 - `model_layers` will not be accessed during testing, as you will use the layers of the pretrained model.
 
 - Finally, simply run on terminal:
 ```
 python3 run.py --test --config=config.py
 ```
+> **Note:** The testing script does not access any hyperparametes, because the model is already trained.
 
 </details>
 
@@ -130,7 +130,7 @@ The western Norwegian crew was unaccustomed, and the heat of hunger had
 their best to remain again. The next danger of twelve miles was from the
 Andara, unable to cross the fierce diamond waves with the hollow.
 ```
-- Note: Unlike recurrent layers, the Multi Head Self Attention forward and backward passes ran many times faster on the GPU than on my M2 CPU.
+> **Note:** Unlike recurrent layers, the Multi Head Self Attention forward and backward passes ran many times faster on the GPU than on my M2 CPU.
 
 
 ## 4. Appendix
