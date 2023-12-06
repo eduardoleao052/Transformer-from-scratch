@@ -38,7 +38,7 @@ pip install -r requirements.txt
   
 - To customize the model layers, go into [config.py](config.py) and edit the `model_layers` dictionary.
   > **Note:**
-  > Each layer takes as arguments the input and output sizes.
+  > <br> Each layer takes as arguments the input and output sizes. </br>
   > **Note:**
   > The first layer must be a `Embedding` layer with input size equals `vocab_size`.
   > **Note:**
