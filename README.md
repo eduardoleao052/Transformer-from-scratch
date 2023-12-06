@@ -39,7 +39,7 @@ pip install -r requirements.txt
   > **Note:** Each layer takes as arguments the input and output sizes.
   > <br> **Note:** The first layer must be a `Embedding` layer with input size equals `vocab_size`. </br>
   > **Note:** The last layer must be a `CrossEntropyLoss` layer with the previous layer's output size equals `vocab_size`.
-<details>
+  <details>
   <summary> You may chose among the following layers: </summary>
 
     - Transformer Layers:
@@ -54,7 +54,7 @@ pip install -r requirements.txt
       - `RNN` (Recurrent Neural Network layer)
       - `LSTM` (Long Short Term Memory layer)
 
-</details>
+  </details>
 </details>
 <details>
 <summary> <h3> Pretraining </h3> </summary>
