@@ -68,8 +68,7 @@ pip install -r requirements.txt
 python3 run.py --train --config=config.py
 ```
 - You can kill the training at any time. This will NOT corrupt the saved models.
-> **Note:** for pretraining deep Transformers (many Blocks in series), a really large text corpus is necessary. I obtained reasonably good results with >1M characters.
-> **Note:** you want to alter layers/dimensions, do so in the [config.py](config.py) file, as described in the __Build the Model__ section.
+> **Note:** for pretraining deep Transformers (many Blocks in series), a really large text corpus is necessary. I obtained reasonably good results with >1M characters. If you want to alter layers/dimensions, do so in the [config.py](config.py) file, as described in the __Build the Model__ section.
 
 </details>
 <details>
@@ -158,7 +157,7 @@ Andara, unable to cross the fierce diamond waves with the hollow.
   - `dropout_prob`: (percentage of weights to be zeroed by dropout layer) <b>[OPTIONAL]</b>
   - `evaluation_interval`: (interval of iterations between evaluation steps) <b>[OPTIONAL]</b>
   - `evaluation_n_timesteps`: (number of characters to be generated in the sample every evaluation) <b>[OPTIONAL]</b>
-  - Note: `model_layers` will not be accessed during fine-tuning, as the layers of the pretrained model will be automatically loaded.
+  > **Note:** `model_layers` will not be accessed during fine-tuning, as the layers of the pretrained model will be automatically loaded.
 
 
 </details>
