@@ -29,8 +29,7 @@ pip install -r requirements.txt
 ```
 - To run, install the necessary requirements and a text corpus (any text you wish to replicate, .txt format).
 - Please download your text file in the data directory.
-> **Note:**
-> The training is by default implemented to detect CUDA availability, and run on CUDA if found.
+> **Note:** The training is by default implemented to detect CUDA availability, and run on CUDA if found.
 
 </details>
 <details>
