@@ -31,6 +31,7 @@ pip install -r requirements.txt
 - Please download your text file in the data directory.
 > **Note**
 > The training is by default implemented to detect CUDA availability, and run on CUDA if found.
+
 </details>
 <details>
 <summary> <h3> Build a Custom Model [Optional] </h3> </summary>
