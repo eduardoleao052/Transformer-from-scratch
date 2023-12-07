@@ -8,8 +8,8 @@
     <a href="https://circleci.com/gh/badges/daily-tests">
         <img src="https://img.shields.io/circleci/project/github/badges/daily-tests?label=service%20tests"
             alt="service-test status"></a>
-    <a href="https://coveralls.io/github/badges/shields">
-        <img src="https://img.shields.io/coveralls/github/badges/shields"
+    <a href="https://coveralls.io/github/eduardoleao052/Transformer-from-scratch">
+        <img src="https://img.shields.io/coveralls/github/eduardoleao052/Transformer-from-scratch"
             alt="coverage"></a>
 </p>
 
