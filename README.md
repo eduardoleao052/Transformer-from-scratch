@@ -1,6 +1,6 @@
 <p align="center">
-    <a href="https://github.com/eduardoleao052/Transformer_from_scratch/graphs/contributors" alt="Contributors">
-        <img src="https://img.shields.io/github/contributors/badges/shields" /></a>
+    <a href="https://github.com/eduardoleao052/Transformer-from-scratch/graphs/contributors" alt="Contributors">
+        <img src="https://img.shields.io/github/contributors/eduardoleao052/Transformer-from-scratch" /></a>
     <a href="#backers" alt="Backers on Open Collective">
         <img src="https://img.shields.io/opencollective/backers/shields" /></a>
     <a href="#sponsors" alt="Sponsors on Open Collective">
