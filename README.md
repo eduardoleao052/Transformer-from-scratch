@@ -1,3 +1,7 @@
+[![Transformer unit tests](https://github.com/jsbaan/transformer-from-scratch/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/jsbaan/transformer-from-scratch/actions/workflows/unit-tests.yml)
+[![Mypy Type Checking](https://github.com/jsbaan/transformer-from-scratch/actions/workflows/mypy-type-checking.yml/badge.svg)](https://github.com/jsbaan/transformer-from-scratch/actions/workflows/mypy-type-checking.yml)
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+
 # Transformer From Scratch in Vanilla Python
 - Educational Transformer with forward and backprop. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it.
 - The full Transformer layers are in [layers.py](src/layers.py). Each has a __forward__ and __backprop__ methods.
