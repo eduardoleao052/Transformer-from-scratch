@@ -3,7 +3,9 @@
 - The full Transformer layers are in [layers.py](src/layers.py). Each has a __forward__ and __backprop__ methods.
 - Multi-Head Self Attention forward + backward has __just 80 lines of code__.
 
-<img src="src/assets/transformer.gif" width="650" align="center" />
+<center>
+<img src="src/assets/transformer.gif" width="650" />
+</center>
 
 ## 1. Project Structure
 - `src/` : Folder with python files.
