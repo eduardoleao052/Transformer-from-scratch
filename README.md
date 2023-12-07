@@ -4,7 +4,7 @@
 - Multi-Head Self Attention forward + backward has __just 80 lines of code__.
   
 <p align="center">
-<img src="src/assets/transformer.mov" width="650" align="middle" />
+<img src="src/assets/transformer.gif" width="650" align="middle" />
 </p>
 
 ## 1. Project Structure
