@@ -3,8 +3,12 @@
         <img src="https://img.shields.io/github/commit-activity/m/eduardoleao052/Transformer-from-scratch" /></a>
     <a href="https://github.com/eduardoleao052/Transformer-from-scratch/graphs/contributors" alt="Contributors">
         <img src="https://img.shields.io/github/contributors/eduardoleao052/Transformer-from-scratch" /></a>
+    <a href="https://www.linkedin.com/in/eduardoleao052/">
+        <img src="https://img.shields.io/badge/Language-Python-blue">
+    </a>
     <a href="https://circleci.com/gh/badges/shields/tree/master">
-        <img src="https://img.shields.io/badge/any_text-you_like-blue"></a>
+        <img src="https://img.shields.io/badge/Linkedin-blue">
+    </a>
 
 </p>
 
