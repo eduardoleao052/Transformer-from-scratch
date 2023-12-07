@@ -4,10 +4,8 @@
     <a href="https://github.com/eduardoleao052/Transformer-from-scratch/graphs/contributors" alt="Contributors">
         <img src="https://img.shields.io/github/contributors/eduardoleao052/Transformer-from-scratch" /></a>
     <a href="https://circleci.com/gh/badges/shields/tree/master">
-        <img src="[https://img.shields.io/circleci/project/github/badges/shields/master](https://img.shields.io/badge/Language_Python" alt="service-test status"></a>
-    <a href="https://circleci.com/gh/badges/daily-tests">
-        <img src="https://img.shields.io/circleci/project/github/badges/daily-tests?label=service%20tests"
-            alt="service-test status"></a>
+        <img src="[https://img.shields.io/circleci/project/github/badges/shields/master](https://img.shields.io/badge/Language_Python)" alt="service-test status"></a>
+
 </p>
 
 # Transformer From Scratch in Vanilla Python
