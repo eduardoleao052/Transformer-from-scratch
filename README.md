@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://github.com/badges/shields/graphs/contributors" alt="Contributors">
+    <a href="https://github.com/eduardoleao052/Transformer_from_scratch/graphs/contributors" alt="Contributors">
         <img src="https://img.shields.io/github/contributors/badges/shields" /></a>
     <a href="#backers" alt="Backers on Open Collective">
         <img src="https://img.shields.io/opencollective/backers/shields" /></a>
