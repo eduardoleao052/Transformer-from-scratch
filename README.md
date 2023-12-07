@@ -7,7 +7,7 @@
         <img src="https://img.shields.io/badge/Language-Python-blue">
     </a>
     <a href="https://circleci.com/gh/badges/shields/tree/master">
-        <img src="https://img.shields.io/badge/Linkedin-blue">
+        <img src="https://img.shields.io/badge/Linkedin%Profile-8A2BE2">
     </a>
 
 </p>
