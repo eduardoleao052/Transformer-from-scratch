@@ -8,9 +8,9 @@
     <a href="https://circleci.com/gh/badges/daily-tests">
         <img src="https://img.shields.io/circleci/project/github/badges/daily-tests?label=service%20tests"
             alt="service-test status"></a>
-    <a href="https://coveralls.io/github/eduardoleao052/Transformer-from-scratch">
-        <img src="https://img.shields.io/coveralls/github/eduardoleao052/Transformer-from-scratch"
-            alt="coverage"></a>
+    <a href="https://twitter.com/intent/follow?screen_name=shields_io">
+        <img src="https://img.shields.io/linkedin"
+            alt="follow on Twitter"></a>
 </p>
 
 # Transformer From Scratch in Vanilla Python
