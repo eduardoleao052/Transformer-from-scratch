@@ -7,7 +7,7 @@
         <img src="https://img.shields.io/badge/language-Python-blue">
     </a>
     <a href="https://www.linkedin.com/in/eduardoleao052/">
-        <img src="https://img.shields.io/badge/Linkedin_Profile-pink">
+        <img src="https://img.shields.io/badge/Linkedin_Profile-red">
     </a>
     
 
