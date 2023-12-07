@@ -1,13 +1,13 @@
 <p align="center">
-    <a href="https://www.python.org/">
-        <img src="https://img.shields.io/badge/Language-Python-blue">
-    </a>
     <a href="https://github.com/eduardoleao052/Transformer-from-scratch/pulse" alt="Activity">
         <img src="https://img.shields.io/github/commit-activity/m/eduardoleao052/Transformer-from-scratch" /></a>
     <a href="https://github.com/eduardoleao052/Transformer-from-scratch/graphs/contributors" alt="Contributors">
         <img src="https://img.shields.io/github/contributors/eduardoleao052/Transformer-from-scratch" /></a>
     <a href="https://www.linkedin.com/in/eduardoleao052/">
         <img src="https://img.shields.io/badge/Linkedin_Profile-light_blue">
+    </a>
+    <a href="https://www.python.org/">
+        <img src="https://img.shields.io/badge/Language-Python-blue">
     </a>
 
 </p>
