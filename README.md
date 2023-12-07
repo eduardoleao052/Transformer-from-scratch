@@ -3,9 +3,6 @@
 - The full Transformer layers are in [layers.py](src/layers.py). Each has a __forward__ and __backprop__ methods.
 - Multi-Head Self Attention forward + backward has __just 80 lines of code__.
   
-<p align="center">
-<img src="src/assets/transformer.gif" width="650" align="middle" />
-</p>
 
 ## 1. Project Structure
 - `src/` : Folder with python files.
@@ -131,6 +128,13 @@ The western Norwegian crew was unaccustomed, and the heat of hunger had
 their best to remain again. The next danger of twelve miles was from the
 Andara, unable to cross the fierce diamond waves with the hollow.
 ```
+
+- Sample from model trained on [Shakespeare's complete works](data/) (~1M characters):
+
+<p align="center">
+<img src="src/assets/transformer.gif" width="650" align="middle" />
+</p>
+
 > **Note:** Unlike recurrent layers, the Multi Head Self Attention forward and backward passes ran many times faster on the GPU than on my M2 CPU.
 
 
