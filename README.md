@@ -6,11 +6,12 @@
     <a href="https://www.python.org/">
         <img src="https://img.shields.io/badge/language-Python-blue">
     </a>
-    <a href="https://www.linkedin.com/in/eduardoleao052/">
-        <img src="https://img.shields.io/badge/linkedin-Profile-red"
+    <a href="mailto:eduardoleao052@usp.br">
+        <img src="https://img.shields.io/badge/-Email-red?style=flat-square&logo=gmail&logoColor=white">
     </a>
-    
-
+    <a href=""https://www.linkedin.com/in/eduardoleao052/">
+        <img src="https://img.shields.io/badge/-Linkedin-blue?style=flat-square&logo=linkedin">
+    </a>
 </p>
 
 # Transformer From Scratch in Vanilla Python
