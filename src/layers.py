@@ -4,6 +4,51 @@ import numpy as np
 from src.utils import *
 
 
+
+class Layer:
+    ''' Generic Layer superclass '''
+    def __init__(self) -> None:
+        '''Initializes the layer and its parameters'''
+        pass
+
+    def initialize_optimizer(self, lr: int, reg: int) -> None:
+        """
+        Creates the self.config dictionary, which contains the optimizer configuration, and the cumulative
+        attributes used by Adam (momentum and adagrad) for each learnable parameter.
+
+        @param lr (dict): the scalar controling the rate of weight updates.
+        @param reg (dict): the scalar controling the size of the weights through L2 regularization.
+        """        
+        self.config = {
+            'learning_rate': lr
+        }
+    
+    def __call__(self, x):
+        '''Alias for forward pass'''
+        return self.forward(x)
+
+    def optimize(self):
+        '''Performs the weight update steps, using self.grads and self.config to update self.params'''
+        pass
+
+    def save_params(self):
+        '''Saves model parameters to a .json file in the path specified by the --to_path argument'''
+        return {key: value.tolist() for key, value in self.params.items()}
+    
+    def load_params(self, params_dict):
+        '''Loads model parameters from .json file in the path specified by the --from_path argument'''
+        self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
+    
+    def decay_lr(self):
+        '''Reduces the learning rate in this layer by 10%'''
+        self.config['learning_rate'] *= 0.9
+
+    def set_mode(self, mode: str) -> None:
+        '''Choose mode between "train" and "test"'''
+        self.mode = mode
+
+
+
 class MultiHeadSelfAttention(Layer):
     ''' Full Transformer Layer implementation. '''
     def __init__(self, in_size, out_size, n_heads, n_timesteps, dropout_prob=0, device='cpu'):
@@ -159,51 +204,6 @@ class MultiHeadSelfAttention(Layer):
         '''Choose mode between "train" and "test" for the dropout layers'''
         self.att_dropout.set_mode(mode)
         self.residual_dropout.set_mode(mode)
-
-
-
-
-class Layer:
-    ''' Generic Layer class '''
-    def __init__(self) -> None:
-        '''Initializes the layer and its parameters'''
-        pass
-
-    def initialize_optimizer(self, lr: int, reg: int) -> None:
-        """
-        Creates the self.config dictionary, which contains the optimizer configuration, and the cumulative
-        attributes used by Adam (momentum and adagrad) for each learnable parameter.
-
-        @param lr (dict): the scalar controling the rate of weight updates.
-        @param reg (dict): the scalar controling the size of the weights through L2 regularization.
-        """        
-        self.config = {
-            'learning_rate': lr
-        }
-    
-    def __call__(self, x):
-        '''Alias for forward pass'''
-        return self.forward(x)
-
-    def optimize(self):
-        '''Performs the weight update steps, using self.grads and self.config to update self.params'''
-        pass
-
-    def save_params(self):
-        '''Saves model parameters to a .json file in the path specified by the --to_path argument'''
-        return {key: value.tolist() for key, value in self.params.items()}
-    
-    def load_params(self, params_dict):
-        '''Loads model parameters from .json file in the path specified by the --from_path argument'''
-        self.params = {key: torch.tensor(value,device=self.device) for key, value in params_dict.items()}
-    
-    def decay_lr(self):
-        '''Reduces the learning rate in this layer by 10%'''
-        self.config['learning_rate'] *= 0.9
-
-    def set_mode(self, mode: str) -> None:
-        '''Choose mode between "train" and "test"'''
-        self.mode = mode
 
 
 

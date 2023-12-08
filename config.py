@@ -16,8 +16,8 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     
     # Edit HERE if you want to train a model from scratch:
     training_params = {
-        '--corpus': f"{PATH}/data/jules_verne.txt", 
-        '--to_path': f"{PATH}/models/verne_w_model.json", 
+        '--corpus': f"{PATH}/data/shakespeare.txt", 
+        '--to_path': f"{PATH}/models/my_model.json", 
         "character_level": False,
         "n_iter": 500000,
         "n_timesteps": 196,
@@ -32,9 +32,9 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     }
     # Edit HERE if you want to fine_tune a pretrained model:
     fine_tuning_params = {
-        '--corpus': f"{PATH}/data/shakespeare.txt", 
-        '--to_path': f"{PATH}/models/fine_tuned_model.json", 
-        '--from_path': f"{PATH}/models/shakespeare_model.json",
+        '--corpus': f"{PATH}/data/jules_verne.txt", 
+        '--to_path': f"{PATH}/models/my_fine_tuned_model.json", 
+        '--from_path': f"{PATH}/models/my_model.json",
         "character_level": True,
         "n_iter": 100000,
         "batch_size": 16,
@@ -48,8 +48,8 @@ def build_config(args: dict, device: str, PATH: str) -> dict:
     }
     # Edit HERE if you want to test a model (generate a sample):
     testing_params = {
-        '--from_path': f"{PATH}/models/verne_w_model.json", 
-        '--testing_corpus': f"{PATH}/data/jules_verne.txt", 
+        '--from_path': f"{PATH}/models/shakespeare_c_model.json", 
+        '--testing_corpus': f"{PATH}/data/shakespeare.txt", 
         'seed': "Nemo",
         'evaluation_n_timesteps': 1000
     }

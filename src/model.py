@@ -1,9 +1,9 @@
-'''Contains final Model class'''
+'''Contains complete Model class (main methods: train, test, sample, save and load)'''
 from src.layers import *
 from src.layers_recurrent import *
 import torch, torch.cuda
 import numpy as np
-from src.utils import build_logger, _get_class
+from src.utils import _build_logger
 import json
 import re
 
@@ -20,7 +20,7 @@ class Model:
         self.config = config
         self.device = device
         self.preloaded = False
-        self.logger = build_logger()
+        self.logger = _build_logger()
         self.layers = layers
         self.vocab_size = self.layers[0].in_size 
         
@@ -199,7 +199,7 @@ class Model:
         for layer in self.layers:
             layer.set_mode('test')
 
-    def _get_batch(self, data:list, n_timesteps:int, batch_size:int) -> tuple:
+    def get_batch(self, data:list, n_timesteps:int, batch_size:int) -> tuple:
         """
         Runs batched forward passes through the entire validation dataset (self.test_text)
         and computes the average of the test loss.
@@ -273,7 +273,7 @@ class Model:
         # go through entire validation set:
         for t in range(n_test_iter):
             #print(f"{t}/{n_test_iter}")
-            input_idxs, target_idxs = self._get_batch(self.test_data, n_timesteps, batch_size)
+            input_idxs, target_idxs = self.get_batch(self.test_data, n_timesteps, batch_size)
                     
             a = input_idxs.clone()
 
@@ -317,7 +317,7 @@ class Model:
             print(f'iter: {t}, loss: {smooth_loss}')
 
             # Get batch from text:
-            input_idxs, target_idxs = self._get_batch(self.train_data, n_timesteps, batch_size)
+            input_idxs, target_idxs = self.get_batch(self.train_data, n_timesteps, batch_size)
             
             # Forward pass:
             a = input_idxs.clone()
