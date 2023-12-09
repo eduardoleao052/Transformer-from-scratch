@@ -162,8 +162,6 @@ I care not, thy firm foe: and he comes not.
 
 </details>
 
-<br/>
-
 <details>
 <summary> Sample from the <h3>Jules Verne model</h3>: </summary>
 
@@ -182,8 +180,6 @@ Andara, unable to cross the fierce diamond waves with the hollow.
 ```
 
 </details>
-
-<br/>
 
 > **Note:** Unlike recurrent layers, the Multi Head Self Attention forward and backward passes ran many times faster on the GPU than on my M2 CPU.
 
