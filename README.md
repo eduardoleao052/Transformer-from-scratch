@@ -20,7 +20,7 @@
 - Multi-Head Self Attention forward + backward has __just 80 lines of code__.
 
 <p align="center">
-<img src="src/assets/transformer.gif" width="750" align="middle" sytle="box-shadow: 3px 3px 3px gray;" />
+<img src="src/assets/transformer.gif" width="750" align="middle" sytle="box-shadow: 10px 10px 10px gray;" />
 </p>
 
 
