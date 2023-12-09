@@ -137,49 +137,49 @@ python3 run.py --test --config=config.py
 - The trainings went on for __100,000 timesteps__, which took __10h40min__ on a GTX1070 NVIDIA GPU.
 
 
-<details>
-<summary> Sample from the <h3>Shakespeare model</h3>: </summary>
+    <details>
+    <summary> Sample from the <h3>Shakespeare model</h3>: </summary>
+        
+    ```
+    LUCIO:
+    Nay, now blame me and my fantasy!
+    As thou shalt know now I do love,
+    Love the blessed strength of our embrace.
     
-```
-LUCIO:
-Nay, now blame me and my fantasy!
-As thou shalt know now I do love,
-Love the blessed strength of our embrace.
+    DUKE VINCENTIO:
+    Dark not is thou will here, poor boy!
+    What thou hast is a judgment taint,
+    And, as much as thou love is real,
+    Thou heart wilt shred apart.
+    
+    LUCIO:
+    Thou rascal! How, my lord, would you rather,
+    Conspire on me, betray my friendsip,
+    But I shall now bear my own fate.
+    I care not, O drunk power: I part with thee,
+    I care not, thy firm foe: and he comes not.
+    ```
+    
+    </details>
 
-DUKE VINCENTIO:
-Dark not is thou will here, poor boy!
-What thou hast is a judgment taint,
-And, as much as thou love is real,
-Thou heart wilt shred apart.
-
-LUCIO:
-Thou rascal! How, my lord, would you rather,
-Conspire on me, betray my friendsip,
-But I shall now bear my own fate.
-I care not, O drunk power: I part with thee,
-I care not, thy firm foe: and he comes not.
-```
-
-</details>
-
-<details>
-<summary> Sample from the <h3>Jules Verne model</h3>: </summary>
-
-```
-Nemo led the frigate by large rocks, the prey which the present
-forest of waves marked. But they planted cries surrounded by waters
-of prayers and tunnels of the large ocean. Besides, they were going
-on to the shore.
-The lowest appliances, with peculiar results, hung patterns and
-frosts to the bottom, accompanied by the dominion of a strange sound,
-was everything that could not be left in this part of the Arctic Circle,
-and manufactured at the end of the Rio Norway Island.
-The western Norwegian crew was unaccustomed, and the heat of hunger had
-their best to remain again. The next danger of twelve miles was from the
-Andara, unable to cross the fierce diamond waves with the hollow.
-```
-
-</details>
+    <details>
+    <summary> Sample from the <h3>Jules Verne model</h3>: </summary>
+    
+    ```
+    Nemo led the frigate by large rocks, the prey which the present
+    forest of waves marked. But they planted cries surrounded by waters
+    of prayers and tunnels of the large ocean. Besides, they were going
+    on to the shore.
+    The lowest appliances, with peculiar results, hung patterns and
+    frosts to the bottom, accompanied by the dominion of a strange sound,
+    was everything that could not be left in this part of the Arctic Circle,
+    and manufactured at the end of the Rio Norway Island.
+    The western Norwegian crew was unaccustomed, and the heat of hunger had
+    their best to remain again. The next danger of twelve miles was from the
+    Andara, unable to cross the fierce diamond waves with the hollow.
+    ```
+    
+    </details>
 
 <br/>
 
