@@ -133,25 +133,12 @@ python3 run.py --test --config=config.py
 
 ## 3. Results
 - The transformer currently implemented in [config.py](config.py) achieved a __loss of 1.01__ with a vocabulary size of 80 characters.
-- I trained it on [Jules Verne's complete works](data/) (~13M characters).
-- The training went on for __100,000 timesteps__, which took __10h40min__ on a GTX1070 NVIDIA GPU.
-- This is a sample from the model:
-```
-Nemo led the frigate by large rocks, the prey which the present
-forest of waves marked. But they planted cries surrounded by waters
-of prayers and tunnels of the large ocean. Besides, they were going
-on to the shore.
-The lowest appliances, with peculiar results, hung patterns and
-frosts to the bottom, accompanied by the dominion of a strange sound,
-was everything that could not be left in this part of the Arctic Circle,
-and manufactured at the end of the Rio Norway Island.
-The western Norwegian crew was unaccustomed, and the heat of hunger had
-their best to remain again. The next danger of twelve miles was from the
-Andara, unable to cross the fierce diamond waves with the hollow.
-```
+- I trained it on [Jules Verne's complete works](data/) (~13M characters), and in [Shakespeare's complete works](data/) (~1M characters).
+- The trainings went on for __100,000 timesteps__, which took __10h40min__ on a GTX1070 NVIDIA GPU.
 
-- Sample from model trained on [Shakespeare's complete works](data/) (~1M characters):
 
+<details>
+<summary> Sample from the Shakespeare model: </summary>
 ```
 LUCIO:
 Nay, now blame me and my fantasy!
@@ -171,6 +158,24 @@ But I shall now bear my own fate.
 I care not, O drunk power: I part with thee,
 I care not, thy firm foe: and he comes not.
 ```
+</details>
+
+<details>
+<summary> Sample from the Jules Verne model: </summary>
+```
+Nemo led the frigate by large rocks, the prey which the present
+forest of waves marked. But they planted cries surrounded by waters
+of prayers and tunnels of the large ocean. Besides, they were going
+on to the shore.
+The lowest appliances, with peculiar results, hung patterns and
+frosts to the bottom, accompanied by the dominion of a strange sound,
+was everything that could not be left in this part of the Arctic Circle,
+and manufactured at the end of the Rio Norway Island.
+The western Norwegian crew was unaccustomed, and the heat of hunger had
+their best to remain again. The next danger of twelve miles was from the
+Andara, unable to cross the fierce diamond waves with the hollow.
+```
+</details>
 
 > **Note:** Unlike recurrent layers, the Multi Head Self Attention forward and backward passes ran many times faster on the GPU than on my M2 CPU.
 
