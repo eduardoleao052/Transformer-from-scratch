@@ -138,7 +138,7 @@ python3 run.py --test --config=config.py
 
 
     <details>
-    <summary> Sample from the <h3>Shakespeare model</h3>: </summary>
+    <summary> Sample from the <b>Shakespeare model</b>: </summary>
         
     ```
     LUCIO:
@@ -163,7 +163,7 @@ python3 run.py --test --config=config.py
     </details>
 
     <details>
-    <summary> Sample from the <h3>Jules Verne model</h3>: </summary>
+    <summary> Sample from the <b>Jules Verne model</b>: </summary>
     
     ```
     Nemo led the frigate by large rocks, the prey which the present
