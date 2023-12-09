@@ -14,14 +14,15 @@
     </a>
 </p>
 
+<p align="center">
+<img src="src/assets/transformer.gif" width="665" align="middle"  />
+</p>
+
 # Transformer From Scratch in Vanilla Python
 - Educational Transformer with __no autograd__. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it.
 - The full Transformer layers are in [layers.py](src/layers.py). Each has a __forward__ and __backprop__ methods.
 - Multi-Head Self Attention forward + backward has __just 80 lines of code__.
 
-<p align="center" style="box-shadow: 100 100 100 black;">
-<img src="src/assets/transformer.gif" width="665" align="middle"  />
-</p>
 
 
 ## 1. Project Structure
