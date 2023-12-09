@@ -138,7 +138,7 @@ python3 run.py --test --config=config.py
 
 
 <details>
-<summary> Sample from the Shakespeare model: </summary>
+<summary> Sample from the <h3>Shakespeare model</h3>: </summary>
     
 ```
 LUCIO:
@@ -165,7 +165,7 @@ I care not, thy firm foe: and he comes not.
 <br/>
 
 <details>
-<summary> Sample from the Jules Verne model: </summary>
+<summary> Sample from the <h3>Jules Verne model</h3>: </summary>
 
 ```
 Nemo led the frigate by large rocks, the prey which the present
