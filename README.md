@@ -179,6 +179,8 @@ their best to remain again. The next danger of twelve miles was from the
 Andara, unable to cross the fierce diamond waves with the hollow.
 ```
 
+<br/>
+
 </details>
 
 > **Note:** Unlike recurrent layers, the Multi Head Self Attention forward and backward passes ran many times faster on the GPU than on my M2 CPU.
