@@ -18,7 +18,11 @@
 - Educational Transformer with __no autograd__. You can train and fine-tune a model on <b>any</b> text file, and it will generate text that sounds like it.
 - The full Transformer layers are in [layers.py](src/layers.py). Each has a __forward__ and __backprop__ methods.
 - Multi-Head Self Attention forward + backward has __just 80 lines of code__.
-  
+
+<p align="center">
+<img src="src/assets/transformer.gif" width="650" align="middle" />
+</p>
+
 
 ## 1. Project Structure
 - `src/` : Folder with python files.
@@ -147,9 +151,25 @@ Andara, unable to cross the fierce diamond waves with the hollow.
 
 - Sample from model trained on [Shakespeare's complete works](data/) (~1M characters):
 
-<p align="center">
-<img src="src/assets/transformer.gif" width="650" align="middle" />
-</p>
+```
+LUCIO:
+Nay, now blame me and my fantasy!
+As thou shalt know now I do love,
+Love the blessed strength of our embrace.
+
+DUKE VINCENTIO:
+Dark not is thou will here, poor boy!
+What thou hast is a judgment taint,
+And, as much as thou love is real,
+Thou heart wilt shred apart.
+
+LUCIO:
+Thou rascal! How, my lord, would you rather,
+Conspire on me, betray my friendsip,
+But I shall now bear my own fate.
+I care not, O drunk power: I part with thee,
+I care not, thy firm foe: and he comes not.
+```
 
 > **Note:** Unlike recurrent layers, the Multi Head Self Attention forward and backward passes ran many times faster on the GPU than on my M2 CPU.
 
