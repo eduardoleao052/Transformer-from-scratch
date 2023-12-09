@@ -139,6 +139,7 @@ python3 run.py --test --config=config.py
 
 <details>
 <summary> Sample from the Shakespeare model: </summary>
+    
 ```
 LUCIO:
 Nay, now blame me and my fantasy!
@@ -158,10 +159,12 @@ But I shall now bear my own fate.
 I care not, O drunk power: I part with thee,
 I care not, thy firm foe: and he comes not.
 ```
+
 </details>
 
 <details>
 <summary> Sample from the Jules Verne model: </summary>
+
 ```
 Nemo led the frigate by large rocks, the prey which the present
 forest of waves marked. But they planted cries surrounded by waters
@@ -175,6 +178,7 @@ The western Norwegian crew was unaccustomed, and the heat of hunger had
 their best to remain again. The next danger of twelve miles was from the
 Andara, unable to cross the fierce diamond waves with the hollow.
 ```
+
 </details>
 
 > **Note:** Unlike recurrent layers, the Multi Head Self Attention forward and backward passes ran many times faster on the GPU than on my M2 CPU.
