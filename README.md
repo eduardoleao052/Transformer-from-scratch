@@ -25,6 +25,10 @@
 <img src="src/assets/transformer.gif" width="665" align="middle"  />
 </p>
 
+> **Note:** See some full samples in the [Results](#3.-results) section.
+.
+
+
 ## 1. Project Structure
 - `src/` : Folder with python files.
   - `src/model.py`:  File with the `Model` class.
