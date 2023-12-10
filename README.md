@@ -25,8 +25,10 @@
 <img src="src/assets/transformer.gif" width="665" align="middle"  />
 </p>
 
+<br/>
+
 > **Note:** See some full samples in the [Results](#3-results) section.
-.
+
 
 
 ## 1. Project Structure
