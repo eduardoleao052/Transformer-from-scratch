@@ -25,7 +25,7 @@
 <img src="src/assets/transformer.gif" width="665" align="middle"  />
 </p>
 
-> **Note:** See some full samples in the [Results](#results) section.
+> **Note:** See some full samples in the [Results](#3-results) section.
 .
 
 
