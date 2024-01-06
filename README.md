@@ -47,7 +47,7 @@
 <details>
 <summary> <h3> Requirements </h3> </summary>
   
-- The required packages are listed in `recquirements.txt`.
+- The required packages are listed in `requirements.txt`.
 - The torch tensors make computation a little faster, and so are is used on the Transformer implementation. However, autograd is NOT used. All backpropagation is manually implemented.
 - The requirements can be installed on a virtual environment with the command:
 ```
