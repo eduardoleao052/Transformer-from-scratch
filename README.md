@@ -45,7 +45,7 @@
     
 ## 2. Running it Yourself
 <details>
-<summary> <h3> Requirements </h3> </summary>
+<summary> <h4> Requirements </h4> </summary>
   
 - The required packages are listed in `requirements.txt`.
 - The torch tensors make computation a little faster, and so are is used on the Transformer implementation. However, autograd is NOT used. All backpropagation is manually implemented.
