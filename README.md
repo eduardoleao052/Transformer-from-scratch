@@ -46,7 +46,8 @@
 ## 2. Running it Yourself
 <details>
 <summary> <b> Requirements </b> </summary>
-  
+<br>
+    
 - The required packages are listed in `requirements.txt`.
 - The torch tensors make computation a little faster, and so are is used on the Transformer implementation. However, autograd is NOT used. All backpropagation is manually implemented.
 - The requirements can be installed on a virtual environment with the command:
@@ -59,7 +60,8 @@ pip install -r requirements.txt
 
 </details>
 <details>
-<summary> <h3> Pretraining </h3> </summary>
+<summary> <b> Pretraining </b> </summary>
+<br>
 
 - To pretrain a Transformer on language modeling (predicting next character), first go into `config.py` and chose the necessary arguments.
 - In the `training_params` dictionary, choose:
@@ -76,7 +78,8 @@ python3 run.py --train --config=config.py
 
 </details>
 <details>
-<summary> <h3> Fine-Tuning </h3> </summary>
+<summary> <b> Fine-Tuning </b> </summary>
+<br>
 
 - To fine-tune a Transformer on a given text file, go to `config.py` and choose the arguments:
 - In the `fine_tuning_params` dictionary, choose:
@@ -94,8 +97,8 @@ python3 run.py --fine_tune --config=config.py
 
 </details>
 <details>
-<summary> <h3> Testing </h3> </summary>
-
+<summary> <b> Testing </b> </summary>
+<br>
 - To test your Transformer, go to `config.py` and choose the arguments:
 - In the `testing_params` dictionary, choose:
   - `--from_path`: (.json file that contains pretrained model)
