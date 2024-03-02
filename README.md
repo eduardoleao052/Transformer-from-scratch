@@ -118,7 +118,6 @@ python3 run.py --test --config=config.py
 </details>
 <details>
 <summary> <b> Build a Custom Model </b> </summary>
-
 <br>
     
 - To customize the model layers, go into [config.py](config.py) and edit the `model_layers` dictionary.
